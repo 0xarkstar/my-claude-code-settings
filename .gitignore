@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (if running install scripts)
+node_modules/
+
+# Backups created by install.sh
+*.backup.*
+
+# Claude Code runtime files (should not be in repo)
+.credentials.json
+stats-cache.json
+history.jsonl
+cache/
+telemetry/
+todos/
+plans/
+paste-cache/
+file-history/
+downloads/
+tmp/
+shell-snapshots/
+session-env/
+ide/
+statsig/
+homunculus/

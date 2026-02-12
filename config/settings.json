@@ -1,0 +1,87 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "DISABLE_AUTOUPDATER": "1",
+    "ENABLE_TOOL_SEARCH": "true"
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "MultiEdit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(python:*)",
+      "Bash(pip:*)",
+      "Bash(ts-node:*)",
+      "Bash(pytest:*)",
+      "Bash(vitest:*)",
+      "Bash(playwright:*)",
+      "Bash(turbo:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(echo:*)",
+      "Bash(sed:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Bash(chmod:*)",
+      "Bash(make:*)",
+      "Bash(cd:*)",
+      "Bash(wc:*)",
+      "Bash(which:*)",
+      "Bash(env:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(diff:*)",
+      "Bash(curl:*)",
+      "Bash(tar:*)",
+      "Bash(gh:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(sudo:*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/secrets/**)",
+      "Bash(cat .env:*)",
+      "Bash(cat .env.:*)",
+      "Bash(head .env:*)",
+      "Bash(tail .env:*)",
+      "Bash(less .env:*)",
+      "Bash(more .env:*)",
+      "Bash(source .env:*)",
+      "Bash(base64 .env:*)",
+      "Bash(chmod 777:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git push *)",
+      "Bash(git force:*)",
+      "Bash(docker:*)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/scripts/context-bar.sh"
+  },
+  "enabledPlugins": {
+    "dx@ykdojo": true
+  }
+}
