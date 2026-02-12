@@ -16,7 +16,7 @@
 | **Skills** | 30+ | Reusable skill packages across multiple languages |
 | **Scripts** | 25+ | Hook scripts, utilities, CI validators |
 | **Contexts** | 3 | Reusable context files (dev, research, review) |
-| **MCP Servers** | 16 | Pre-configured MCP server templates (12 global + 4 project) |
+| **MCP Servers** | 16 | Pre-configured MCP server templates (15 global + 1 project) |
 
 ## Quick Start
 
@@ -157,7 +157,7 @@ Rules are loaded into Claude Code's system prompt for every session.
 
 ## MCP Servers
 
-### Global (12 servers, configured in `~/.claude.json`)
+### Global (15 servers, configured in `~/.claude.json`)
 
 | Server | Type | Description |
 |--------|------|-------------|
@@ -170,15 +170,15 @@ Rules are loaded into Claude Code's system prompt for every session.
 | `clickhouse` | HTTP | ClickHouse analytics |
 | `magic` | stdio | Magic UI components |
 | `filesystem` | stdio | Filesystem operations |
+| `sequential-thinking` | stdio | Structured reasoning chains |
+| `context7` | stdio | Live documentation lookup |
+| `c4ai-sse` | SSE | Crawl4AI via Docker (localhost:11235) |
 
-### Project-Level (4 servers)
+### Project-Level (1 server)
 
 | Server | Description |
 |--------|-------------|
-| `memory` | Persistent memory across sessions |
-| `sequential-thinking` | Structured reasoning chains |
-| `context7` | Live documentation lookup |
-| `c4ai-sse` | Crawl4AI via Docker (localhost:11235) |
+| `memory` | Persistent memory per project (isolated to avoid cross-project pollution) |
 
 Use `config/claude.json.template` as a starting point for your `~/.claude.json`.
 
