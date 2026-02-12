@@ -16,7 +16,7 @@
 | **Skills** | 30+ | Reusable skill packages across multiple languages |
 | **Scripts** | 25+ | Hook scripts, utilities, CI validators |
 | **Contexts** | 3 | Reusable context files (dev, research, review) |
-| **MCP Servers** | 16 | Pre-configured MCP server templates (15 global + 1 project) |
+| **MCP Servers** | 15 | Pre-configured global MCP server templates |
 
 ## Quick Start
 
@@ -174,11 +174,7 @@ Rules are loaded into Claude Code's system prompt for every session.
 | `context7` | stdio | Live documentation lookup |
 | `c4ai-sse` | SSE | Crawl4AI via Docker (localhost:11235) |
 
-### Project-Level (1 server)
-
-| Server | Description |
-|--------|-------------|
-| `memory` | Persistent memory per project (isolated to avoid cross-project pollution) |
+> **Note**: MCP memory server (`@modelcontextprotocol/server-memory`) is intentionally excluded — Claude Code's built-in auto memory (`~/.claude/projects/*/memory/`) provides the same functionality natively with automatic loading and no extra process overhead.
 
 Use `config/claude.json.template` as a starting point for your `~/.claude.json`.
 
