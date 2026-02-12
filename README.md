@@ -5,6 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-2.1+-blue.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
+Built on top of configurations and ideas from:
+- [everything-claude-code](https://github.com/affaan-m/everything-claude-code) — Anthropic hackathon winner's complete config collection
+- [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) — Karpathy's coding guidelines as Claude Code skills
+- [claude-code-tips](https://github.com/ykdojo/claude-code-tips) — Practical tips and the `dx` plugin
+
 ## What's Included
 
 | Component | Count | Description |
@@ -213,11 +218,24 @@ After running `install.sh`:
    - `YOUR_PROJECT_PATH` with your actual projects directory
    - Run `gh auth login` for GitHub Copilot MCP
 
-2. **Docker Services** (optional, for Crawl4AI MCP):
+2. **Docker Services** (optional, for web crawling + search):
    ```bash
+   # Crawl4AI — web scraping/crawling with MCP SSE interface
    docker run -d --name crawl4ai --restart unless-stopped \
      -p 11235:11235 --shm-size=1g unclecode/crawl4ai:latest
+
+   # SearXNG — privacy-respecting meta search engine (JSON API)
+   docker run -d --name searxng --restart unless-stopped \
+     -p 8888:8080 searxng/searxng:latest
    ```
+
+   Both containers use `--restart unless-stopped` (auto-restart on crash and Docker daemon restart). They share the default Docker bridge network, so Crawl4AI can reach SearXNG via `host.docker.internal:8888`.
+
+   **SearXNG** provides a local search API (no API key needed):
+   ```bash
+   curl -s "http://localhost:8888/search?q=QUERY&format=json" | jq '.results[:5]'
+   ```
+   Enable JSON format in SearXNG settings (`~/.config/searxng/settings.yml`): `formats: [html, json]`
 
 3. **Plugin**:
    ```
