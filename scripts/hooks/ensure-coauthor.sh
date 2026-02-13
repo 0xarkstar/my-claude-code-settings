@@ -1,0 +1,29 @@
+#!/bin/bash
+# PreToolUse hook: ensures Co-Authored-By trailer in git commit commands.
+#
+# The Co-Authored-By trailer is a system prompt instruction, but the model
+# often forgets it at high context (post-pipeline). This hook catches it.
+
+input=$(cat)
+
+command=$(echo "$input" | jq -r '.tool_input.command // ""')
+
+# Only check commands that contain "git commit"
+if ! echo "$command" | grep -q 'git commit'; then
+    exit 0
+fi
+
+# Skip if it's not actually committing (e.g., git commit --amend, git commit-tree)
+# We want to catch: git commit -m, git commit -am, git add && git commit
+if ! echo "$command" | grep -qE 'git commit\s+(-[a-zA-Z]*m|--message)'; then
+    exit 0
+fi
+
+# Check if Co-Authored-By is already present
+if echo "$command" | grep -qi 'Co-Authored-By'; then
+    exit 0
+fi
+
+echo >&2 "[Hook] git commit missing Co-Authored-By trailer."
+echo >&2 "[Hook] Append to commit message: Co-Authored-By: Claude <noreply@anthropic.com>"
+echo "{\"decision\": \"block\", \"reason\": \"Commit message must include Co-Authored-By trailer. Append this to your commit message (after a blank line): Co-Authored-By: Claude <noreply@anthropic.com>\"}"

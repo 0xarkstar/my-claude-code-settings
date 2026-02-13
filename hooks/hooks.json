@@ -23,6 +23,16 @@
         "description": "Reminder to use tmux for long-running commands"
       },
       {
+        "matcher": "tool == \"Bash\" && tool_input.command matches \"git commit\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/ensure-coauthor.sh"
+          }
+        ],
+        "description": "Ensure Co-Authored-By trailer in git commit messages"
+      },
+      {
         "matcher": "tool == \"Bash\" && tool_input.command matches \"git push\"",
         "hooks": [
           {
@@ -60,7 +70,17 @@
             "command": "bash ~/.claude/scripts/hooks/check-context-preemptive.sh"
           }
         ],
-        "description": "Block heavy operations (plan execution, team spawn) when context is above 65%"
+        "description": "Block heavy operations (plan execution, team spawn) when context is above 55%"
+      },
+      {
+        "matcher": "tool == \"Task\" || tool == \"TeamCreate\" || tool == \"ExitPlanMode\" || tool == \"Edit\" || tool == \"Write\" || tool == \"NotebookEdit\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/block-after-pipeline.sh"
+          }
+        ],
+        "description": "Block heavy operations after Pipeline Complete (prevents -ing freeze)"
       },
       {
         "matcher": "tool == \"Task\"",
@@ -166,7 +186,17 @@
             "command": "bash ~/.claude/scripts/check-context.sh"
           }
         ],
-        "description": "Half-clone safety net: block stop when context usage exceeds 85%"
+        "description": "Half-clone safety net: block stop when context usage exceeds 75%"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/detect-pipeline-complete.sh"
+          }
+        ],
+        "description": "Detect Pipeline Complete and warn user to /half-clone"
       }
     ],
     "TaskCompleted": [

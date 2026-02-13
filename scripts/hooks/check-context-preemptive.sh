@@ -1,9 +1,12 @@
 #!/bin/bash
-# PreToolUse hook: blocks ExitPlanMode and TeamCreate when context > 65%.
+# PreToolUse hook: blocks ExitPlanMode and TeamCreate when context > 55%.
 #
-# Why: At 65%+ context, starting a new implementation phase (which spawns
-# agents, generates code, runs tests) will push context past 80% where
-# the model can enter unrecoverable extended-thinking loops.
+# Why: At 55%+ context, starting a new implementation phase (which spawns
+# agents, generates code, runs tests) will push context past 60-70% where
+# the model can enter unrecoverable extended-thinking loops (-ing bug).
+#
+# Lowered from 65% → 55%: all -ing incidents occurred at 60-64% context.
+# Catching at 55% gives enough headroom for the pipeline to finish.
 #
 # The model should /half-clone BEFORE starting heavy new work.
 
@@ -43,7 +46,7 @@ pct=$((context_length * 100 / max_context))
 
 tool_name=$(echo "$input" | jq -r '.tool_name // "unknown"')
 
-if [[ $pct -ge 65 ]]; then
+if [[ $pct -ge 55 ]]; then
     echo >&2 "[Hook] CONTEXT WARNING: ${pct}% used. ${tool_name} will push context higher."
     echo >&2 "[Hook] Run /half-clone BEFORE starting new heavy work (plan execution, team spawn)."
     echo "{\"decision\": \"block\", \"reason\": \"Context is at ${pct}% — too high to start ${tool_name}. Run /half-clone first to create a fresh session with recent context, then retry.\"}"
