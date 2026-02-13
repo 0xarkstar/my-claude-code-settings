@@ -15,7 +15,7 @@ Built on top of configurations and ideas from:
 | Component | Count | Description |
 |-----------|------:|-------------|
 | **Agents** | 13 | Custom agent definitions (2 Opus, 7 Sonnet, 4 Haiku) |
-| **Rules** | 7 | Global behavioral rules (coding style, security, TDD, etc.) |
+| **Rules** | 8 | Global behavioral rules (coding style, security, TDD, MCP priority, etc.) |
 | **Hooks** | 17 | Event-driven automations across 8 lifecycle events |
 | **Commands** | 25 | Slash commands for common workflows |
 | **Skills** | 30+ | Reusable skill packages across multiple languages |
@@ -95,6 +95,7 @@ Rules are loaded into Claude Code's system prompt for every session.
 | `performance.md` | Model selection strategy, context window management |
 | `security.md` | Secret management, input validation, OWASP checklist |
 | `testing.md` | 80% coverage minimum, TDD workflow, test types |
+| `mcp-priority.md` | SearXNG + Crawl4AI local stack preferred over cloud APIs |
 
 ## Hook System
 
@@ -167,7 +168,7 @@ Rules are loaded into Claude Code's system prompt for every session.
 | Server | Type | Description |
 |--------|------|-------------|
 | `github` | HTTP | GitHub Copilot MCP (PRs, issues, repos) |
-| `firecrawl` | stdio | Web scraping (requires API key) |
+| `firecrawl` | stdio | Web scraping — `firecrawl_agent` only (500 credits limited) |
 | `supabase` | HTTP | Supabase database, auth, storage |
 | `vercel` | HTTP | Vercel deployment |
 | `railway` | stdio | Railway deployment |
@@ -177,9 +178,21 @@ Rules are loaded into Claude Code's system prompt for every session.
 | `filesystem` | stdio | Filesystem operations |
 | `sequential-thinking` | stdio | Structured reasoning chains |
 | `context7` | stdio | Live documentation lookup |
-| `c4ai-sse` | SSE | Crawl4AI via Docker (localhost:11235) |
+| `c4ai-sse` | SSE | Crawl4AI via Docker (localhost:11235) — primary scraping tool |
 
 > **Note**: MCP memory server (`@modelcontextprotocol/server-memory`) is intentionally excluded — Claude Code's built-in auto memory (`~/.claude/projects/*/memory/`) provides the same functionality natively with automatic loading and no extra process overhead.
+
+### MCP Priority: Local Stack First
+
+The `mcp-priority.md` rule enforces a **SearXNG → Crawl4AI** local workflow over cloud APIs:
+
+```
+Search  →  SearXNG (curl localhost:8888)     free, unlimited, local
+Scrape  →  Crawl4AI (c4ai-sse MCP)           free, unlimited, local
+Fallback → WebSearch (built-in) / Firecrawl   rate-limited, costs money
+```
+
+Firecrawl is reserved for `firecrawl_agent` (autonomous multi-step exploration) only. See `rules/mcp-priority.md` for full details.
 
 Use `config/claude.json.template` as a starting point for your `~/.claude.json`.
 
