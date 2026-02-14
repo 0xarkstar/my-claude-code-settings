@@ -26,4 +26,5 @@ fi
 
 echo >&2 "[Hook] git commit missing Co-Authored-By trailer."
 echo >&2 "[Hook] Append to commit message: Co-Authored-By: Claude <noreply@anthropic.com>"
-echo "{\"decision\": \"block\", \"reason\": \"Commit message must include Co-Authored-By trailer. Append this to your commit message (after a blank line): Co-Authored-By: Claude <noreply@anthropic.com>\"}"
+echo >&2 "Commit message must include Co-Authored-By trailer. Append this to your commit message (after a blank line): Co-Authored-By: Claude <noreply@anthropic.com>"
+exit 2
