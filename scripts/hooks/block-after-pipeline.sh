@@ -35,4 +35,5 @@ esac
 
 echo >&2 "[Hook] Pipeline Complete. Tool '${tool_name}' blocked."
 echo >&2 "[Hook] Run /half-clone to continue in a fresh session."
-echo "{\"decision\": \"block\", \"reason\": \"Pipeline Complete was detected. Heavy operations are blocked to prevent -ing freeze. Run /half-clone to create a fresh session, then continue your work there.\"}"
+echo >&2 "Pipeline Complete was detected. Heavy operations are blocked to prevent -ing freeze. Run /half-clone to create a fresh session, then continue your work there."
+exit 2

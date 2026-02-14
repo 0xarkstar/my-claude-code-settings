@@ -49,5 +49,6 @@ tool_name=$(echo "$input" | jq -r '.tool_name // "unknown"')
 if [[ $pct -ge 55 ]]; then
     echo >&2 "[Hook] CONTEXT WARNING: ${pct}% used. ${tool_name} will push context higher."
     echo >&2 "[Hook] Run /half-clone BEFORE starting new heavy work (plan execution, team spawn)."
-    echo "{\"decision\": \"block\", \"reason\": \"Context is at ${pct}% — too high to start ${tool_name}. Run /half-clone first to create a fresh session with recent context, then retry.\"}"
+    echo >&2 "Context is at ${pct}% — too high to start ${tool_name}. Run /half-clone first to create a fresh session with recent context, then retry."
+    exit 2
 fi
