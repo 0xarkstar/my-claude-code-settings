@@ -163,7 +163,7 @@ Rules are loaded into Claude Code's system prompt for every session.
 
 ## MCP Servers
 
-### Global (15 servers, configured in `~/.claude.json`)
+### Global (16 servers, configured in `~/.claude.json`)
 
 | Server | Type | Description |
 |--------|------|-------------|
@@ -179,6 +179,7 @@ Rules are loaded into Claude Code's system prompt for every session.
 | `sequential-thinking` | stdio | Structured reasoning chains |
 | `context7` | stdio | Live documentation lookup |
 | `c4ai-sse` | SSE | Crawl4AI via Docker (localhost:11235) — primary scraping tool |
+| `playwright` | stdio | Playwright browser automation (E2E testing, web interaction) |
 
 > **Note**: MCP memory server (`@modelcontextprotocol/server-memory`) is intentionally excluded — Claude Code's built-in auto memory (`~/.claude/projects/*/memory/`) provides the same functionality natively with automatic loading and no extra process overhead.
 

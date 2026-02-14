@@ -66,6 +66,11 @@
     "c4ai-sse": {
       "type": "sse",
       "url": "http://localhost:11235/mcp/sse"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
     }
   },
   "projects": {}
