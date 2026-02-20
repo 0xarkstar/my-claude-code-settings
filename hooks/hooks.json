@@ -63,16 +63,6 @@
         "description": "Suggest manual compaction at logical intervals"
       },
       {
-        "matcher": "tool == \"ExitPlanMode\" || tool == \"TeamCreate\"",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/hooks/check-context-preemptive.sh"
-          }
-        ],
-        "description": "Block heavy operations (plan execution, team spawn) when context is above 55%"
-      },
-      {
         "matcher": "tool == \"Task\" || tool == \"TeamCreate\" || tool == \"ExitPlanMode\" || tool == \"Edit\" || tool == \"Write\" || tool == \"NotebookEdit\"",
         "hooks": [
           {
@@ -177,16 +167,6 @@
           }
         ],
         "description": "Check for console.log in modified files after each response"
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/check-context.sh"
-          }
-        ],
-        "description": "Half-clone safety net: block stop when context usage exceeds 75%"
       },
       {
         "matcher": "*",
