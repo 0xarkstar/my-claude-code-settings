@@ -182,7 +182,10 @@ If the user requests a new feature after `## Pipeline Complete`, the lead MUST:
 2. In the new session, start the new pipeline from P0
 3. NEVER continue with new planning/implementation in a session that already ran a full pipeline — the accumulated context (~120k+ tokens) will cause extended-thinking hangs during plan execution.
 
-This is enforced by `check-context-preemptive.sh` which blocks ExitPlanMode and TeamCreate above 65% context.
+Enforced by three hooks:
+- `check-context-preemptive.sh`: blocks ExitPlanMode/TeamCreate above **55%** context
+- `detect-pipeline-complete.sh` (Stop): detects "Pipeline Complete" → sets flag + warns user
+- `block-after-pipeline.sh` (PreToolUse): blocks Edit/Write/Task/TeamCreate/ExitPlanMode when flag is set
 
 ### Integration
 

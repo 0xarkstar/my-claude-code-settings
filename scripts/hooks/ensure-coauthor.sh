@@ -13,9 +13,9 @@ if ! echo "$command" | grep -q 'git commit'; then
     exit 0
 fi
 
-# Skip if it's not actually committing (e.g., git commit --amend, git commit-tree)
-# We want to catch: git commit -m, git commit -am, git add && git commit
-if ! echo "$command" | grep -qE 'git commit\s+(-[a-zA-Z]*m|--message)'; then
+# Skip if the command doesn't use -m or --message (e.g., git commit-tree)
+# Matches: git commit -m, git commit -am, git commit -a -m, git commit --no-verify -m
+if ! echo "$command" | grep -qE '\s-[a-zA-Z]*m\s|--message'; then
     exit 0
 fi
 
