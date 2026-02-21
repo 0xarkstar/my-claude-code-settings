@@ -51,7 +51,8 @@
       "Bash(curl:*)",
       "Bash(tar:*)",
       "Bash(gh:*)",
-      "mcp__pencil"
+      "mcp__pencil",
+      "Read(**/.env.example)"
     ],
     "deny": [
       "Bash(rm -rf /)",
