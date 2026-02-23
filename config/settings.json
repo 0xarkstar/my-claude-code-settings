@@ -52,14 +52,19 @@
       "Bash(tar:*)",
       "Bash(gh:*)",
       "mcp__pencil",
-      "Read(**/.env.example)"
+      "mcp__pencil"
     ],
     "deny": [
       "Bash(rm -rf /)",
       "Bash(rm -rf ~)",
       "Bash(sudo:*)",
       "Read(**/.env)",
-      "Read(**/.env.*)",
+      "Read(**/.env.local)",
+      "Read(**/.env.development)",
+      "Read(**/.env.production)",
+      "Read(**/.env.staging)",
+      "Read(**/.env.testnet)",
+      "Read(**/.env.mainnet)",
       "Read(**/secrets/**)",
       "Bash(cat .env:*)",
       "Bash(cat .env.:*)",
