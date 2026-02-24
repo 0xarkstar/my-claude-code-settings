@@ -51,7 +51,6 @@
       "Bash(curl:*)",
       "Bash(tar:*)",
       "Bash(gh:*)",
-      "mcp__pencil",
       "mcp__pencil"
     ],
     "deny": [
@@ -74,7 +73,17 @@
       "Bash(more .env:*)",
       "Bash(source .env:*)",
       "Bash(base64 .env:*)",
-      "Bash(chmod 777:*)"
+      "Bash(chmod 777:*)",
+      "Read(**/.env.backup)",
+      "Read(**/.env.secret)",
+      "Read(**/.env.keys)",
+      "Read(**/.env.old)",
+      "Read(**/.env.bak)",
+      "Bash(grep * .env:*)",
+      "Bash(sed * .env:*)",
+      "Bash(awk * .env:*)",
+      "Bash(git show *:.env*)",
+      "Bash(git log -p *:.env*)"
     ],
     "ask": [
       "Bash(git push:*)",
