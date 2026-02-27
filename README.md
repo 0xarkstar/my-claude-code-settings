@@ -1,6 +1,6 @@
 # Claude Code Setup
 
-> A battle-tested Claude Code configuration with 13 agents, 17 hooks, 25 commands, 30+ skills, and a multi-agent pipeline system.
+> A battle-tested Claude Code configuration with 7 agents, 17 hooks, 25 commands, 30+ skills, and a multi-agent pipeline system.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-2.1+-blue.svg)](https://docs.anthropic.com/en/docs/claude-code)
@@ -14,7 +14,7 @@ Built on top of configurations and ideas from:
 
 | Component | Count | Description |
 |-----------|------:|-------------|
-| **Agents** | 13 | Custom agent definitions (2 Opus, 7 Sonnet, 4 Haiku) |
+| **Agents** | 7 | Custom agent definitions (3 Sonnet, 4 Haiku) — language/tool specialists only |
 | **Rules** | 8 | Global behavioral rules (coding style, security, TDD, MCP priority, etc.) |
 | **Hooks** | 17 | Event-driven automations across 8 lifecycle events |
 | **Commands** | 25 | Slash commands for common workflows |
@@ -48,7 +48,7 @@ bash install.sh --dry-run
 ```
 ~/.claude/
 ├── settings.json              # Permissions, env vars, status line, plugins
-├── agents/                    # 13 custom agent definitions
+├── agents/                    # 7 custom agent definitions
 ├── rules/                     # 7 global rules (loaded into system prompt)
 ├── hooks/
 │   └── hooks.json             # 17 hooks across 8 lifecycle events
@@ -68,19 +68,15 @@ Agents are specialized sub-agents spawned by Claude Code for specific tasks. Eac
 
 | Model | Agent | Purpose |
 |-------|-------|---------|
-| **Opus** | `architect` | System design, scalability, architecture decisions |
-| **Opus** | `planner` | Implementation planning, requirements breakdown |
-| **Sonnet** | `security-reviewer` | OWASP Top 10, secrets detection, vulnerability scanning |
-| **Sonnet** | `build-error-resolver` | TypeScript/build error resolution with minimal diffs |
 | **Sonnet** | `e2e-runner` | Playwright E2E test generation and execution |
-| **Sonnet** | `tdd-guide` | Test-driven development enforcement (80%+ coverage) |
-| **Sonnet** | `database-reviewer` | PostgreSQL optimization, schema review, RLS |
 | **Sonnet** | `refactor-cleaner` | Dead code detection (knip, depcheck, ts-prune) |
-| **Sonnet** | `go-build-resolver` | Go build/vet error resolution |
-| **Haiku** | `code-reviewer` | General code review (quality, security, maintainability) |
-| **Haiku** | `python-reviewer` | PEP 8, type hints, ruff/mypy/bandit checks |
-| **Haiku** | `go-reviewer` | Idiomatic Go, concurrency, error handling review |
+| **Sonnet** | `python-reviewer` | PEP 8, type hints, ruff/mypy/bandit checks |
+| **Haiku** | `database-reviewer` | PostgreSQL optimization, schema review, RLS |
 | **Haiku** | `doc-updater` | Documentation and codemap generation |
+| **Haiku** | `go-reviewer` | Idiomatic Go, concurrency, error handling review |
+| **Haiku** | `go-build-resolver` | Go build/vet error resolution |
+
+> **Note**: Generic agents (architect, planner, code-reviewer, security-reviewer, tdd-guide, build-error-resolver) were removed — OMC provides superior equivalents with richer prompts. Only language/tool specialists that have no OMC equivalent are kept as custom agents.
 
 ## Rules
 
@@ -103,7 +99,7 @@ Rules are loaded into Claude Code's system prompt for every session.
 
 | Event | Hooks | Key Functions |
 |-------|------:|---------------|
-| **PreToolUse** | 7 | Block dev servers outside tmux, review before push, block random .md files, suggest compaction, 65% context block, team 3-member limit |
+| **PreToolUse** | 7 | Block dev servers outside tmux, review before push, block random .md files, suggest compaction, 55% context block, pipeline-complete block |
 | **PreCompact** | 1 | Save state before context compaction |
 | **SessionStart** | 1 | Load previous session, detect package manager |
 | **PostToolUse** | 4 | PR URL logging, build analysis, Prettier formatting, TypeScript checking (all async) |
@@ -206,13 +202,14 @@ P-1 Research → P0 Design → P0.5 Review → P1 Implementation → P1.5 Integr
 ```
 
 Key features:
-- Max 3 simultaneous teammates (tmux race prevention)
+- Native teams (child_process.fork) — no teammate limit
 - Lead delegates only — never touches code directly
 - `p-` prefix naming for pipeline agents
-- 6-step phase transition protocol with shutdown verification
+- 4-step phase transition protocol with blocking shutdown verification
 - Failure recovery with PROGRESS.md-based state
 - Optional git worktree strategy for branch isolation
-- Context safety: blocks heavy operations above 65%, forces clone above 75%
+- Context safety: blocks ExitPlanMode above 55%, forces clone above 75%
+- Team routing: `/team` for native pipeline, `/omc-teams` for tmux CLI workers
 
 ## Permissions
 
@@ -271,12 +268,13 @@ After running `install.sh`:
 Hard-won debugging insights from production use:
 
 1. **Always confirm shutdown before TeamDelete** — skipping causes orphan agents + infinite thinking loops
-2. **Run cleanup scripts BEFORE TeamDelete** — config is needed to find tmux pane IDs
-3. **Stop hook stdout = decision channel** — never echo raw data to stdout in Stop hooks
-4. **Context at 75%+ → /half-clone** — extended thinking fails to converge above 80%
-5. **New work after Pipeline Complete = new session** — 120k+ accumulated tokens prevent convergence
-6. **macOS has no flock** — use `mkdir` atomic locks instead
-7. **Prevent TeammateIdle storms** — inactive teammates must exit 0 immediately
+2. **Stop hook stdout = decision channel** — never echo raw data to stdout in Stop hooks
+3. **Context at 75%+ → /half-clone** — extended thinking fails to converge above 80%
+4. **New work after Pipeline Complete = new session** — 120k+ accumulated tokens prevent convergence
+5. **macOS has no flock** — use `mkdir` atomic locks instead
+6. **Prevent TeammateIdle storms** — inactive teammates must exit 0 immediately
+7. **PreToolUse hooks must use `exit 2` to block** — `{"decision":"block"}` JSON is silently ignored for PreToolUse
+8. **cleanup-team-panes.sh is for /omc-teams only** — native teams (/team) are cleaned up by TeamDelete
 
 ## License
 

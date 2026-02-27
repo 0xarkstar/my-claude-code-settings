@@ -1,6 +1,9 @@
 #!/bin/bash
 # cleanup-team-panes.sh — Kill tmux panes for completed/inactive teammates
 #
+# SCOPE: For /omc-teams (tmux workers) only. Not for /team (native teams).
+# Native teams use child_process.fork and are cleaned up by TeamDelete.
+#
 # Usage:
 #   cleanup-team-panes.sh [team-name]    # specific team (works even if config deleted)
 #   cleanup-team-panes.sh --all          # all teams

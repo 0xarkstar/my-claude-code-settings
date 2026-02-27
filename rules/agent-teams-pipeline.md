@@ -7,7 +7,7 @@
 
 ### Absolute Constraints
 
-- Max **3 simultaneous active teammates** (tmux race condition prevention)
+- No hard limit on teammates (native teams use child_process.fork, not tmux)
 - Lead **never modifies code directly** — delegate mode (Shift+Tab)
 - Lead does not substitute for failed teammates — **spawn replacement**
 - Default: `write` (1:1); `broadcast` only for direction changes
@@ -31,7 +31,7 @@ Pipeline teammates use `p-` prefix. Never spawn standalone agents as pipeline me
 
 ### Phase Transition Protocol
 
-**CRITICAL: Steps 3-5 MUST execute in exact order. Never call TeamDelete before shutdown is confirmed.**
+**CRITICAL: Steps 3-4 MUST execute in exact order. Never call TeamDelete before shutdown is confirmed.**
 
 1. `TaskList` — verify all teammates completed
 2. Verify output files in `docs/pipeline/`
@@ -45,13 +45,11 @@ Pipeline teammates use `p-` prefix. Never spawn standalone agents as pipeline me
      - **Failed**: [what didn't work and why]
      - **Remaining**: [unfinished items for next phase]
 3. `shutdown_request` each teammate → **WAIT for approval response** (do NOT proceed until all confirm)
-   - If a teammate doesn't respond within 30s, send `/exit` via tmux pane as fallback
-4. `bash ~/.claude/scripts/cleanup-team-panes.sh [team-name]` (kills remaining tmux panes)
-5. `cleanup` (TeamDelete) — **only after ALL teammates confirmed or panes killed**
-6. `bash ~/.claude/scripts/cleanup-team-panes.sh --orphans` (safety net: catch any leaked agents)
-7. `TaskCreate` next phase (`blockedBy` completed IDs)
-8. Spawn new teammates (include previous phase output paths)
-9. Record in `docs/pipeline/PROGRESS.md`
+   - If a teammate doesn't respond within 30s, send a follow-up message; after 60s treat as confirmed
+4. `cleanup` (TeamDelete) — **only after ALL teammates confirmed or timed out**
+5. `TaskCreate` next phase (`blockedBy` completed IDs)
+6. Spawn new teammates (include previous phase output paths)
+7. Record in `docs/pipeline/PROGRESS.md`
 
 ### Adaptive Phase Selection
 
@@ -112,9 +110,7 @@ Skip optional phases aggressively. Mini (P0→P1→P2) ~240 vs Full ~335. Minimi
 | Task overdue | Reminder at 2x → 3 reminders → shutdown + replace |
 | File conflict | git diff → non-owner reverts → respawn if needed |
 | Session crash | Read PROGRESS.md → resume from last completed phase |
-| tmux residue | `bash ~/.claude/scripts/cleanup-team-panes.sh [team]` |
-| Orphan agents | `bash ~/.claude/scripts/cleanup-team-panes.sh --orphans` |
-| Config deleted before shutdown | `cleanup-team-panes.sh` auto-falls back to orphan detection |
+| Teammate unresponsive | SendMessage follow-up → 60s timeout → treat as confirmed → TeamDelete |
 
 ### Git Worktree Strategy (Optional)
 
@@ -156,7 +152,7 @@ docs/pipeline/
 
 After the **final phase** completes (P2 PASS, or P3/P4 if triggered):
 
-1. Execute Phase Transition Protocol steps 1-6 (TaskList → TeamDelete → orphan check) for the last phase
+1. Execute Phase Transition Protocol steps 1-4 (TaskList → TeamDelete) for the last phase
 2. Write final summary to `docs/pipeline/PROGRESS.md` with `## Pipeline Complete` header
 3. **STOP making tool calls.** Output the final results as plain text to the user
 4. Do NOT spawn new teammates, create new tasks, or start new phases
@@ -164,14 +160,13 @@ After the **final phase** completes (P2 PASS, or P3/P4 if triggered):
 
 **Shutdown sequence is BLOCKING:** Do not proceed to TeamDelete until all teammates have either:
 - Confirmed shutdown (shutdown_response with approve=true), OR
-- Been force-killed via tmux pane cleanup
+- Timed out after 60s (treat as confirmed)
 
 **Resume after session crash:**
 - Read `docs/pipeline/PROGRESS.md`
 - If it contains `## Pipeline Complete` → report results, do NOT restart pipeline
 - If it does NOT contain `## Pipeline Complete` → resume from last completed phase
 - If team config no longer exists → do NOT attempt SendMessage to old teammates
-- **Always run** `bash ~/.claude/scripts/cleanup-team-panes.sh --orphans` on resume
 
 **Critical:** Once all phases are done, the lead's job is to **report results and stop**.
 Any further tool calls only waste context and risk triggering Stop hook loops.
@@ -182,10 +177,17 @@ If the user requests a new feature after `## Pipeline Complete`, the lead MUST:
 2. In the new session, start the new pipeline from P0
 3. NEVER continue with new planning/implementation in a session that already ran a full pipeline — the accumulated context (~120k+ tokens) will cause extended-thinking hangs during plan execution.
 
-Enforced by three hooks:
-- `check-context-preemptive.sh`: blocks ExitPlanMode/TeamCreate above **55%** context
+Enforced by hooks:
+- OMC `context-safety.mjs` (PreToolUse): blocks ExitPlanMode above **55%** context
 - `detect-pipeline-complete.sh` (Stop): detects "Pipeline Complete" → sets flag + warns user
 - `block-after-pipeline.sh` (PreToolUse): blocks Edit/Write/Task/TeamCreate/ExitPlanMode when flag is set
+
+### Team Routing Rules
+
+- "팀으로 작업해줘" / "team" → `/team` (native teams, staged pipeline)
+- "omc-teams" / explicit "gemini" → `/omc-teams` (tmux CLI workers)
+- Pipeline mode always uses `/team` (native teams)
+- Gemini CLI: `/opt/homebrew/bin/gemini` v0.30.0 (available via `/omc-teams` only)
 
 ### Integration
 
