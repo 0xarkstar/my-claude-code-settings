@@ -123,6 +123,115 @@ pre_generate_uuids() {
     fi
 }
 
+update_sessions_index() {
+    local session_id="$1"
+    local target_file="$2"
+    local project_dir="$3"
+    local project_path="$4"
+    local message_count="$5"
+    local clone_tag="$6"
+    local display_text="$7"
+
+    if ! command -v python3 &> /dev/null; then
+        log_warning "python3 not found, skipping sessions-index.json update"
+        return
+    fi
+
+    local index_file="${project_dir}/sessions-index.json"
+
+    # Get file mtime in milliseconds
+    local file_mtime
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        file_mtime=$(( $(stat -f %m "$target_file") * 1000 ))
+    else
+        local stat_result
+        stat_result=$(stat -c '%Y' "$target_file" 2>/dev/null || echo "")
+        if [ -z "$stat_result" ]; then
+            file_mtime=$(( $(date +%s) * 1000 ))
+        else
+            file_mtime=$(( stat_result * 1000 ))
+        fi
+    fi
+
+    # Extract timestamps from the cloned file
+    local created modified
+    created=$(head -1 "$target_file" | grep -oE '"timestamp":"[^"]*"' | head -1 | sed 's/"timestamp":"//;s/"$//')
+    modified=$(tail -5 "$target_file" | grep -oE '"timestamp":"[^"]*"' | tail -1 | sed 's/"timestamp":"//;s/"$//')
+    if [ -z "$created" ]; then
+        created=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+    fi
+    if [ -z "$modified" ]; then
+        modified=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+    fi
+
+    # Use mkdir atomic lock (macOS has no flock)
+    local lockdir="${index_file}.lock.d"
+    local attempt=0
+    while ! mkdir "$lockdir" 2>/dev/null; do
+        attempt=$((attempt + 1))
+        if [ "$attempt" -ge 20 ]; then
+            log_warning "Could not acquire lock on sessions-index.json"
+            return
+        fi
+        sleep 0.1
+    done
+
+    # All JSON construction and escaping handled by Python via env vars (no shell injection)
+    local python_err
+    python_err=$(HC_SESSION_ID="$session_id" \
+        HC_FULL_PATH="$target_file" \
+        HC_FILE_MTIME="$file_mtime" \
+        HC_FIRST_PROMPT="$display_text" \
+        HC_MESSAGE_COUNT="$message_count" \
+        HC_CREATED="$created" \
+        HC_MODIFIED="$modified" \
+        HC_PROJECT_PATH="$project_path" \
+        HC_INDEX_FILE="$index_file" \
+        python3 -c '
+import json, sys, os
+
+index_file = os.environ["HC_INDEX_FILE"]
+new_entry = {
+    "sessionId": os.environ["HC_SESSION_ID"],
+    "fullPath": os.environ["HC_FULL_PATH"],
+    "fileMtime": int(os.environ["HC_FILE_MTIME"]),
+    "firstPrompt": os.environ["HC_FIRST_PROMPT"][:200].replace("\n", " ").strip(),
+    "messageCount": int(os.environ["HC_MESSAGE_COUNT"]),
+    "created": os.environ["HC_CREATED"],
+    "modified": os.environ["HC_MODIFIED"],
+    "gitBranch": "",
+    "projectPath": os.environ["HC_PROJECT_PATH"],
+    "isSidechain": False,
+}
+
+try:
+    with open(index_file) as f:
+        idx = json.load(f)
+    if idx.get("version") != 1 or not isinstance(idx.get("entries"), list):
+        idx = {"version": 1, "entries": []}
+except (FileNotFoundError, json.JSONDecodeError):
+    idx = {"version": 1, "entries": []}
+
+session_id = os.environ["HC_SESSION_ID"]
+idx["entries"] = [e for e in idx["entries"] if e.get("sessionId") != session_id]
+idx["entries"].append(new_entry)
+
+tmp_file = index_file + ".tmp"
+with open(tmp_file, "w") as f:
+    json.dump(idx, f, indent=2)
+os.rename(tmp_file, index_file)
+' 2>&1)
+    local python_rc=$?
+
+    rmdir "$lockdir" 2>/dev/null || true
+
+    if [ "$python_rc" -eq 0 ]; then
+        log_success "Sessions index updated"
+    else
+        log_warning "Could not update sessions-index.json: ${python_err}"
+    fi
+}
+
 preview_conversation() {
     local source_session="$1"
     local project_path="$2"
@@ -475,6 +584,11 @@ half_clone_conversation() {
     # Add history entry
     echo "{\"display\":\"${display_text}\",\"pastedContents\":{},\"timestamp\":${timestamp},\"project\":\"${project_path}\",\"sessionId\":\"${new_session}\"}" >> "$HISTORY_FILE"
     log_success "History entry added"
+
+    # Update sessions-index.json so the session appears immediately in 'claude -r'
+    # Without this, the background indexer must scan ALL session files (can be 500+/2GB+)
+    # which often times out, leaving half-cloned sessions invisible in the resume list.
+    update_sessions_index "$new_session" "$target_file" "$project_dir" "$project_path" "$output_line_count" "$clone_tag" "$display_text"
 
     # Note: We don't copy todos for half-clone since the context is truncated
 

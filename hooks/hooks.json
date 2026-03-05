@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/hooks/ensure-coauthor.sh"
+            "command": "bash /Users/arkstar/.claude/scripts/hooks/ensure-coauthor.sh"
           }
         ],
         "description": "Ensure Co-Authored-By trailer in git commit messages"
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"~/.claude/scripts/hooks/suggest-compact.js\""
+            "command": "node \"/Users/arkstar/.claude/scripts/hooks/suggest-compact.js\""
           }
         ],
         "description": "Suggest manual compaction at logical intervals"
@@ -67,20 +67,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/hooks/block-after-pipeline.sh"
+            "command": "bash /Users/arkstar/.claude/scripts/hooks/block-after-pipeline.sh"
           }
         ],
         "description": "Block heavy operations after Pipeline Complete (prevents -ing freeze)"
-      },
-      {
-        "matcher": "tool == \"Task\"",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"~/.claude/scripts/hooks/check-team-limit.js\""
-          }
-        ],
-        "description": "Pipeline: block teammate spawn when team has 3+ active members (race condition prevention)"
       }
     ],
     "PreCompact": [
@@ -89,7 +79,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"~/.claude/scripts/hooks/pre-compact.js\""
+            "command": "node \"/Users/arkstar/.claude/scripts/hooks/pre-compact.js\""
           }
         ],
         "description": "Save state before context compaction"
@@ -101,7 +91,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"~/.claude/scripts/hooks/session-start.js\""
+            "command": "node \"/Users/arkstar/.claude/scripts/hooks/session-start.js\""
           }
         ],
         "description": "Load previous context and detect package manager on new session"
@@ -119,18 +109,6 @@
           }
         ],
         "description": "Log PR URL and provide review command after PR creation"
-      },
-      {
-        "matcher": "tool == \"Bash\" && tool_input.command matches \"(npm run build|pnpm build|yarn build)\"",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{console.error('[Hook] Build completed - async analysis running in background');console.log(d)})\"",
-            "async": true,
-            "timeout": 30
-          }
-        ],
-        "description": "Example: async hook for build analysis (runs in background without blocking)"
       },
       {
         "matcher": "tool == \"Edit\" && tool_input.file_path matches \"\\\\.(ts|tsx|js|jsx)$\"",
@@ -163,7 +141,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"~/.claude/scripts/hooks/check-console-log.js\""
+            "command": "node \"/Users/arkstar/.claude/scripts/hooks/check-console-log.js\""
           }
         ],
         "description": "Check for console.log in modified files after each response"
@@ -173,7 +151,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/hooks/detect-pipeline-complete.sh"
+            "command": "bash /Users/arkstar/.claude/scripts/hooks/detect-pipeline-complete.sh"
           }
         ],
         "description": "Detect Pipeline Complete and warn user to /half-clone"
@@ -185,7 +163,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/hooks/verify-phase-output.sh"
+            "command": "bash /Users/arkstar/.claude/scripts/hooks/verify-phase-output.sh"
           }
         ],
         "description": "Pipeline: verify phase output files before task completion"
@@ -197,7 +175,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/hooks/check-idle-reason.sh"
+            "command": "bash /Users/arkstar/.claude/scripts/hooks/check-idle-reason.sh"
           }
         ],
         "description": "Pipeline: check idle reason for pipeline agents"
@@ -209,7 +187,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"~/.claude/scripts/hooks/session-end.js\""
+            "command": "node \"/Users/arkstar/.claude/scripts/hooks/session-end.js\""
           }
         ],
         "description": "Persist session state on end"
@@ -219,7 +197,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"~/.claude/scripts/hooks/evaluate-session.js\""
+            "command": "node \"/Users/arkstar/.claude/scripts/hooks/evaluate-session.js\""
           }
         ],
         "description": "Evaluate session for extractable patterns"

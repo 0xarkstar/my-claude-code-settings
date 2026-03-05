@@ -1,6 +1,6 @@
 # Claude Code Setup
 
-> A battle-tested Claude Code configuration with 7 agents, 17 hooks, 25 commands, 30+ skills, and a multi-agent pipeline system.
+> A battle-tested Claude Code configuration with 7 agents, 15 hooks, 25 commands, 30+ skills, and a multi-agent pipeline system.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-2.1+-blue.svg)](https://docs.anthropic.com/en/docs/claude-code)
@@ -16,7 +16,7 @@ Built on top of configurations and ideas from:
 |-----------|------:|-------------|
 | **Agents** | 7 | Custom agent definitions (3 Sonnet, 4 Haiku) — language/tool specialists only |
 | **Rules** | 8 | Global behavioral rules (coding style, security, TDD, MCP priority, etc.) |
-| **Hooks** | 17 | Event-driven automations across 8 lifecycle events |
+| **Hooks** | 15 | Event-driven automations across 8 lifecycle events |
 | **Commands** | 25 | Slash commands for common workflows |
 | **Skills** | 30+ | Reusable skill packages across multiple languages |
 | **Scripts** | 25+ | Hook scripts, utilities, CI validators |
@@ -55,7 +55,7 @@ bash install.sh --dry-run
 ├── commands/                  # 25 slash commands
 ├── scripts/
 │   ├── *.sh, *.js             # 6 top-level utility scripts
-│   ├── hooks/                 # 10 hook handler scripts
+│   ├── hooks/                 # 9 hook handler scripts
 │   ├── lib/                   # 4 shared libraries
 │   └── ci/                    # 5 CI validation scripts
 ├── skills/                    # 30+ skill packages
@@ -95,15 +95,15 @@ Rules are loaded into Claude Code's system prompt for every session.
 
 ## Hook System
 
-17 hooks fire across 8 lifecycle events to automate quality checks and workflow enforcement.
+15 hooks fire across 8 lifecycle events to automate quality checks and workflow enforcement.
 
 | Event | Hooks | Key Functions |
 |-------|------:|---------------|
-| **PreToolUse** | 7 | Block dev servers outside tmux, review before push, block random .md files, suggest compaction, 55% context block, pipeline-complete block |
+| **PreToolUse** | 6 | Block dev servers outside tmux, enforce Co-Authored-By, review before push, block random .md files, suggest compaction, pipeline-complete block |
 | **PreCompact** | 1 | Save state before context compaction |
 | **SessionStart** | 1 | Load previous session, detect package manager |
-| **PostToolUse** | 4 | PR URL logging, build analysis, Prettier formatting, TypeScript checking (all async) |
-| **Stop** | 2 | console.log detection, 75% context → force /half-clone |
+| **PostToolUse** | 3 | PR URL logging, Prettier formatting, TypeScript checking (all async) |
+| **Stop** | 2 | console.log detection, pipeline complete detection |
 | **TaskCompleted** | 1 | Pipeline deliverable verification |
 | **TeammateIdle** | 1 | Pipeline idle reason check, orphan detection |
 | **SessionEnd** | 2 | Persist session state, extract patterns |
@@ -151,9 +151,9 @@ Rules are loaded into Claude Code's system prompt for every session.
 
 **Security**: `security-review` (includes cloud infrastructure security)
 
-**Workflow**: `tdd-workflow`, `verification-loop`, `eval-harness`, `iterative-retrieval`, `strategic-compact`, `karpathy-guidelines`
+**Workflow**: `tdd-workflow`, `verification-loop`, `eval-harness`, `iterative-retrieval`, `strategic-compact`
 
-**Learning**: `continuous-learning`, `continuous-learning-v2` (instinct-based system with observer agent, hooks, and CLI)
+**Learning**: `continuous-learning-v2` (instinct-based system with observer agent, hooks, and CLI)
 
 **Examples**: `project-guidelines-example`
 
