@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"console.error('[Hook] BLOCKED: Dev server must run in tmux for log access');console.error('[Hook] Use: tmux new-session -d -s dev \\\"npm run dev\\\"');console.error('[Hook] Then: tmux attach -t dev');process.exit(1)\""
+            "command": "node -e \"console.error('[Hook] BLOCKED: Dev server must run in tmux for log access');console.error('[Hook] Use: tmux new-session -d -s dev \\\"npm run dev\\\"');console.error('[Hook] Then: tmux attach -t dev');process.exit(2)\""
           }
         ],
         "description": "Block dev servers outside tmux - ensures you can access logs"
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash $HOME/.claude/scripts/hooks/ensure-coauthor.sh"
+            "command": "bash /Users/arkstar/.claude/scripts/hooks/ensure-coauthor.sh"
           }
         ],
         "description": "Ensure Co-Authored-By trailer in git commit messages"
@@ -43,11 +43,11 @@
         "description": "Reminder before git push to review changes"
       },
       {
-        "matcher": "tool == \"Write\" && tool_input.file_path matches \"\\\\.(md|txt)$\" && !(tool_input.file_path matches \"README\\\\.md|CLAUDE\\\\.md|AGENTS\\\\.md|CONTRIBUTING\\\\.md\") && !(tool_input.file_path matches \"docs/pipeline/\")",
+        "matcher": "tool == \"Write\" && tool_input.file_path matches \"\\\\.(?:md|txt)$\" && \\!(tool_input.file_path matches \"README\\\\.md|CLAUDE\\\\.md|AGENTS\\\\.md|CONTRIBUTING\\\\.md|CHANGELOG\\\\.md|LICENSE\\\\.md|ARCHITECTURE\\\\.md\") && \\!(tool_input.file_path matches \"docs/|.claude/|.omc/|Obsidian/\")",
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';if(/\\.(md|txt)$/.test(p)&&!/(README|CLAUDE|AGENTS|CONTRIBUTING)\\.md$/.test(p)&&!/docs\\/pipeline\\//.test(p)){console.error('[Hook] BLOCKED: Unnecessary documentation file creation');console.error('[Hook] File: '+p);console.error('[Hook] Use README.md for documentation instead');process.exit(1)}console.log(d)})\""
+            "command": "node -e \"const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';if(/\\.(md|txt)$/.test(p)&&!/(README|CLAUDE|AGENTS|CONTRIBUTING|CHANGELOG|LICENSE|ARCHITECTURE)\\.md$/.test(p)&&!/(docs\\/|\\.claude\\/|\\.omc\\/|Obsidian\\/)/.test(p)){console.error('[Hook] BLOCKED: Unnecessary documentation file creation');console.error('[Hook] File: '+p);console.error('[Hook] Use README.md for documentation instead');process.exit(2)}console.log(d)})\""
           }
         ],
         "description": "Block creation of random .md files - keeps docs consolidated"
@@ -55,7 +55,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "tool == \"Bash\"",
+        "matcher": "tool == \"Bash\" && tool_input.command matches \"gh pr create\"",
         "hooks": [
           {
             "type": "command",
@@ -88,7 +88,7 @@
             "timeout": 30
           }
         ],
-        "description": "TypeScript check after editing .ts/.tsx files (async — non-blocking)"
+        "description": "TypeScript check after editing .ts/.tsx files (async \u2014 non-blocking)"
       }
     ]
   }

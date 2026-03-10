@@ -10,7 +10,7 @@ When search is needed, always follow this order:
 
 ```
 1. Search via SearXNG (Bash)
-   curl -s "http://localhost:8888/search?q=QUERY&format=json" | jq '.results[:5] | .[] | {title, url}'
+   curl -s "http://100.91.194.29:8888/search?q=QUERY&format=json" | jq '.results[:5] | .[] | {title, url}'
 
 2. Scrape URLs via Crawl4AI (MCP)
    mcp__c4ai-sse__md   → extract page as markdown
@@ -21,19 +21,19 @@ When search is needed, always follow this order:
 
 ```bash
 # Web search (default)
-curl -s "http://localhost:8888/search?q=QUERY&format=json"
+curl -s "http://100.91.194.29:8888/search?q=QUERY&format=json"
 
 # Images
-curl -s "http://localhost:8888/search?q=QUERY&format=json&categories=images"
+curl -s "http://100.91.194.29:8888/search?q=QUERY&format=json&categories=images"
 
 # News
-curl -s "http://localhost:8888/search?q=QUERY&format=json&categories=news"
+curl -s "http://100.91.194.29:8888/search?q=QUERY&format=json&categories=news"
 
 # Videos
-curl -s "http://localhost:8888/search?q=QUERY&format=json&categories=videos"
+curl -s "http://100.91.194.29:8888/search?q=QUERY&format=json&categories=videos"
 
 # IT / Dev
-curl -s "http://localhost:8888/search?q=QUERY&format=json&categories=it"
+curl -s "http://100.91.194.29:8888/search?q=QUERY&format=json&categories=it"
 ```
 
 ### Crawl4AI Tool Mapping
@@ -50,7 +50,7 @@ curl -s "http://localhost:8888/search?q=QUERY&format=json&categories=it"
 
 ### Priority Rules
 
-1. **Search → SearXNG** via `curl localhost:8888` (prefer over WebSearch, firecrawl_search)
+1. **Search → SearXNG** via `curl 100.91.194.29:8888` (prefer over WebSearch, firecrawl_search)
 2. **Scraping → Crawl4AI** via c4ai-sse MCP tools (prefer over firecrawl_scrape)
 3. **WebSearch (built-in)** → fallback only when SearXNG curl fails
 4. **Firecrawl** → `firecrawl_agent` (autonomous exploration) only, 500 credits limited
