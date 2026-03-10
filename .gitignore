@@ -15,6 +15,9 @@ node_modules/
 # Backups created by install.sh
 *.backup.*
 
+# OMC runtime state
+.omc/
+
 # Claude Code runtime files (should not be in repo)
 .credentials.json
 stats-cache.json
