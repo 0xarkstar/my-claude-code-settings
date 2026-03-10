@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash /Users/arkstar/.claude/scripts/hooks/ensure-coauthor.sh"
+            "command": "bash $HOME/.claude/scripts/hooks/ensure-coauthor.sh"
           }
         ],
         "description": "Ensure Co-Authored-By trailer in git commit messages"
@@ -51,50 +51,6 @@
           }
         ],
         "description": "Block creation of random .md files - keeps docs consolidated"
-      },
-      {
-        "matcher": "tool == \"Edit\" || tool == \"Write\"",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"/Users/arkstar/.claude/scripts/hooks/suggest-compact.js\""
-          }
-        ],
-        "description": "Suggest manual compaction at logical intervals"
-      },
-      {
-        "matcher": "tool == \"Task\" || tool == \"TeamCreate\" || tool == \"ExitPlanMode\" || tool == \"Edit\" || tool == \"Write\" || tool == \"NotebookEdit\"",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /Users/arkstar/.claude/scripts/hooks/block-after-pipeline.sh"
-          }
-        ],
-        "description": "Block heavy operations after Pipeline Complete (prevents -ing freeze)"
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"/Users/arkstar/.claude/scripts/hooks/pre-compact.js\""
-          }
-        ],
-        "description": "Save state before context compaction"
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"/Users/arkstar/.claude/scripts/hooks/session-start.js\""
-          }
-        ],
-        "description": "Load previous context and detect package manager on new session"
       }
     ],
     "PostToolUse": [
@@ -133,74 +89,6 @@
           }
         ],
         "description": "TypeScript check after editing .ts/.tsx files (async — non-blocking)"
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"/Users/arkstar/.claude/scripts/hooks/check-console-log.js\""
-          }
-        ],
-        "description": "Check for console.log in modified files after each response"
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /Users/arkstar/.claude/scripts/hooks/detect-pipeline-complete.sh"
-          }
-        ],
-        "description": "Detect Pipeline Complete and warn user to /half-clone"
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /Users/arkstar/.claude/scripts/hooks/verify-phase-output.sh"
-          }
-        ],
-        "description": "Pipeline: verify phase output files before task completion"
-      }
-    ],
-    "TeammateIdle": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /Users/arkstar/.claude/scripts/hooks/check-idle-reason.sh"
-          }
-        ],
-        "description": "Pipeline: check idle reason for pipeline agents"
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"/Users/arkstar/.claude/scripts/hooks/session-end.js\""
-          }
-        ],
-        "description": "Persist session state on end"
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"/Users/arkstar/.claude/scripts/hooks/evaluate-session.js\""
-          }
-        ],
-        "description": "Evaluate session for extractable patterns"
       }
     ]
   }

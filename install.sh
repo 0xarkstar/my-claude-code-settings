@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Claude Code Setup Installer
 # Copies configuration files to ~/.claude/ with backup support
+# Works alongside OMC (oh-my-claudecode) plugin — custom hooks only
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
@@ -27,6 +28,10 @@ usage() {
   echo ""
   echo "This script installs Claude Code configuration files to ~/.claude/"
   echo "Existing files are backed up with a .backup.TIMESTAMP extension."
+  echo ""
+  echo "For OMC (oh-my-claudecode) orchestration, install the plugin separately:"
+  echo "  /plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode"
+  echo "  /plugin install oh-my-claudecode"
 }
 
 log() { echo -e "${GREEN}[+]${NC} $1"; }
@@ -111,6 +116,7 @@ done
 echo ""
 echo "╔══════════════════════════════════════╗"
 echo "║    Claude Code Setup Installer       ║"
+echo "║    + OMC Plugin Integration          ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
 
@@ -147,22 +153,31 @@ if ! $DRY_RUN; then
 fi
 
 # Step 1: Settings
-log "Step 1/8: Core settings"
+log "Step 1/7: Core settings"
 backup_file "$CLAUDE_DIR/settings.json"
 copy_file "$SCRIPT_DIR/config/settings.json" "$CLAUDE_DIR/settings.json" "settings.json"
 
-# Step 2: Agents
-log "Step 2/8: Agent definitions"
-backup_dir "$CLAUDE_DIR/agents"
-copy_dir "$SCRIPT_DIR/agents" "$CLAUDE_DIR/agents" "agents"
+# Step 2: Agents (custom only — OMC provides 18 base agents via plugin)
+log "Step 2/7: Custom agent definitions"
+if [[ -d "$CLAUDE_DIR/agents" ]]; then
+  info "Existing agents dir found — merging custom agents only"
+fi
+if ! $DRY_RUN; then
+  mkdir -p "$CLAUDE_DIR/agents"
+fi
+for agent_file in "$SCRIPT_DIR/agents"/*.md; do
+  [[ -f "$agent_file" ]] || continue
+  agent_name=$(basename "$agent_file")
+  copy_file "$agent_file" "$CLAUDE_DIR/agents/$agent_name" "agent: $agent_name"
+done
 
 # Step 3: Rules
-log "Step 3/8: Global rules"
+log "Step 3/7: Global rules"
 backup_dir "$CLAUDE_DIR/rules"
 copy_dir "$SCRIPT_DIR/rules" "$CLAUDE_DIR/rules" "rules"
 
-# Step 4: Hooks
-log "Step 4/8: Hook system"
+# Step 4: Hooks (custom only — OMC provides orchestration hooks via plugin)
+log "Step 4/7: Custom hooks"
 backup_file "$CLAUDE_DIR/hooks/hooks.json"
 if ! $DRY_RUN; then
   mkdir -p "$CLAUDE_DIR/hooks"
@@ -170,7 +185,7 @@ fi
 copy_file "$SCRIPT_DIR/hooks/hooks.json" "$CLAUDE_DIR/hooks/hooks.json" "hooks.json"
 
 # Step 5: Scripts
-log "Step 5/8: Scripts"
+log "Step 5/7: Scripts"
 backup_dir "$CLAUDE_DIR/scripts"
 copy_dir "$SCRIPT_DIR/scripts" "$CLAUDE_DIR/scripts" "scripts"
 
@@ -181,25 +196,33 @@ if ! $DRY_RUN; then
 fi
 
 # Step 6: Commands
-log "Step 6/8: Slash commands"
+log "Step 6/7: Slash commands"
 backup_dir "$CLAUDE_DIR/commands"
 copy_dir "$SCRIPT_DIR/commands" "$CLAUDE_DIR/commands" "commands"
 
 # Step 7: Skills
-log "Step 7/8: Skills"
-backup_dir "$CLAUDE_DIR/skills"
-copy_dir "$SCRIPT_DIR/skills" "$CLAUDE_DIR/skills" "skills"
+log "Step 7/7: Skills"
+if [[ -d "$CLAUDE_DIR/skills" ]]; then
+  info "Existing skills dir found — merging custom skills only"
+fi
+if ! $DRY_RUN; then
+  mkdir -p "$CLAUDE_DIR/skills"
+fi
+for skill_dir in "$SCRIPT_DIR/skills"/*/; do
+  [[ -d "$skill_dir" ]] || continue
+  skill_name=$(basename "$skill_dir")
+  if ! $DRY_RUN; then
+    mkdir -p "$CLAUDE_DIR/skills/$skill_name"
+    cp -r "$skill_dir"* "$CLAUDE_DIR/skills/$skill_name/" 2>/dev/null || true
+  fi
+  log "Installed skill: $skill_name"
+done
 
-# Step 8: Contexts
-log "Step 8/8: Context files"
-backup_dir "$CLAUDE_DIR/contexts"
-copy_dir "$SCRIPT_DIR/contexts" "$CLAUDE_DIR/contexts" "contexts"
-
-# Fix hook script paths (replace ~ with actual home dir)
+# Fix hook script paths (replace hardcoded paths with $HOME)
 if ! $DRY_RUN; then
   if [[ -f "$CLAUDE_DIR/hooks/hooks.json" ]]; then
-    sed -i '' "s|~/\.claude/|$CLAUDE_DIR/|g" "$CLAUDE_DIR/hooks/hooks.json" 2>/dev/null || \
-    sed -i "s|~/\.claude/|$CLAUDE_DIR/|g" "$CLAUDE_DIR/hooks/hooks.json" 2>/dev/null || true
+    sed -i '' "s|\\\$HOME/.claude/|$CLAUDE_DIR/|g" "$CLAUDE_DIR/hooks/hooks.json" 2>/dev/null || \
+    sed -i "s|\\\$HOME/.claude/|$CLAUDE_DIR/|g" "$CLAUDE_DIR/hooks/hooks.json" 2>/dev/null || true
     log "Updated hook script paths for your environment"
   fi
 fi
@@ -219,25 +242,27 @@ if ! $DRY_RUN; then
   echo "  Commands:  $(find "$CLAUDE_DIR/commands" -name "*.md" | wc -l | tr -d ' ') files"
   echo "  Scripts:   $(find "$CLAUDE_DIR/scripts" -type f | wc -l | tr -d ' ') files"
   echo "  Skills:    $(find "$CLAUDE_DIR/skills" -maxdepth 1 -type d | tail -n +2 | wc -l | tr -d ' ') packages"
-  echo "  Contexts:  $(find "$CLAUDE_DIR/contexts" -name "*.md" | wc -l | tr -d ' ') files"
 fi
 
 echo ""
 warn "Post-install checklist:"
 echo ""
-echo "  1. MCP Servers — Edit ~/.claude.json using config/claude.json.template"
+echo "  1. OMC Plugin (required for team/autopilot/ralph/ultrawork):"
+echo "     In a Claude Code session, run:"
+echo "       /plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode"
+echo "       /plugin install oh-my-claudecode"
+echo "     Then install the npm CLI:"
+echo "       npm install -g oh-my-claude-sisyphus@latest"
+echo "       omc install"
+echo ""
+echo "  2. MCP Servers — Edit ~/.claude.json using config/claude.json.template"
 echo "     - Set FIRECRAWL_API_KEY (or remove firecrawl server)"
 echo "     - Set filesystem path to your projects directory"
-echo "     - Configure project-level MCP servers"
-echo ""
-echo "  2. GitHub MCP — Run: gh auth login (for GitHub Copilot MCP)"
+echo "     - Run: gh auth login (for GitHub Copilot MCP)"
 echo ""
 echo "  3. Docker services (optional):"
 echo "     docker run -d --name crawl4ai --restart unless-stopped -p 11235:11235 --shm-size=1g unclecode/crawl4ai:latest"
 echo "     docker run -d --name searxng --restart unless-stopped -p 8888:8080 searxng/searxng:latest"
 echo ""
-echo "  4. Plugin — Install dx plugin from within Claude Code:"
-echo "     /install-plugin dx@ykdojo"
-echo ""
-echo "  5. Restart Claude Code to load all configurations"
+echo "  4. Restart Claude Code to load all configurations"
 echo ""
