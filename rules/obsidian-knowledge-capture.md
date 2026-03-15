@@ -14,15 +14,26 @@ decisions — narrative context that MEMORY.md cannot provide.
 | 2 | ~/Obsidian/Dev/ | Narrative paragraphs (50-150 words) | Developer reading independently | Claude writes at decision points |
 | 3 | MCP memory graph | Entity-relation triples | Claude cross-entity queries | Claude updates when explicit |
 
-## When to Write an Obsidian Note (3-Question Gate)
+## When to Write an Obsidian Note
 
-Write a note ONLY if ALL THREE questions are YES:
+### TIL Gate (Low — write frequently)
+
+Write a TIL note if EITHER question is YES:
+
+1. Did this require >5 minutes of non-obvious debugging?
+2. Is this a gotcha/quirk NOT in official docs that you'd forget in a month?
+
+TIL notes are 1-3 sentences. Bias toward writing. `Resources/TIL/` is the inbox of knowledge.
+
+### Full Note Gate (High — write selectively)
+
+Write an ADR/pattern/post-mortem ONLY if ALL THREE questions are YES:
 
 1. Would the developer benefit from reading this in paragraph form 6 months from now?
 2. Is this NOT findable in official documentation with a quick search?
 3. Did discovering this require >10 minutes of non-obvious debugging or experimentation?
 
-**Default behavior: DO NOT write a note.** Only write when the gate is passed.
+**Default behavior for non-TIL: DO NOT write a note.** Only write when the gate is passed.
 
 ## Decision-Point Triggers (examples that typically pass the gate)
 
@@ -48,12 +59,13 @@ After solving a non-trivial problem, evaluate:
 
 ```
 Q1: Is the core insight one sentence (a fact/pattern)?
-    YES → Add to MEMORY.md as a bullet point
+    YES → Add to MEMORY.md as a bullet point AND write a TIL note
     NO  → continue
 
-Q2: Did this require >10 min of non-obvious work?
+Q2: Did this require >5 min of non-obvious work?
+    YES (5-10 min) → Write a TIL note (1-3 sentences)
+    YES (>10 min)  → continue to Q3 for full note
     NO  → discard (recoverable)
-    YES → continue
 
 Q3: Is the insight time-stable (not a metric that changes)?
     NO  → MEMORY.md with a "(check for staleness)" marker
@@ -61,7 +73,7 @@ Q3: Is the insight time-stable (not a metric that changes)?
 
 Q4: Does a similar note already exist in ~/Obsidian/Dev/?
     YES → read it and APPEND/UPDATE, do not create duplicate
-    NO  → create new note
+    NO  → create new note (ADR/pattern/post-mortem)
 ```
 
 ## Note Format (use exactly)
@@ -106,15 +118,29 @@ Examples:
 
 ## How to Write (Mechanism)
 
-Use the **Write tool** directly to the filesystem path. Do NOT use Obsidian CLI.
-The vault is a directory of .md files — Obsidian picks up new files automatically.
+Use the **Obsidian CLI** to create notes. This ensures immediate indexing, template support,
+and proper integration with Obsidian's internal API.
 
-**New projects:** If `~/Obsidian/Dev/Projects/{project}/` does not exist, create it with
-`mkdir -p ~/Obsidian/Dev/Projects/{project}/` before writing the first note.
+```bash
+# Create a new note with template
+obsidian vault="Dev" create name="2026-03-14-my-finding" \
+  path="Resources/TIL/2026-03-14-my-finding.md" \
+  content="---\ntype: til\nproject: arb-bot\ndate: 2026-03-14\ntags: [python]\n---\n\n# Title\n\n## Context\n...\n\n## Finding\n...\n\n## Why This Matters\n..." \
+  silent
+
+# Append to existing note
+obsidian vault="Dev" append path="Resources/TIL/existing-note.md" content="\n## Update\n..."
+
+# Search before creating (avoid duplicates)
+obsidian vault="Dev" search query="keyword" limit=5
+```
+
+**New projects:** If a folder doesn't exist yet, use `mkdir -p` first — the CLI's `create`
+command does not auto-create parent directories.
 The project name should match the directory name in `/Users/arkstar/Projects/`.
 
-Always check with Glob first: `~/Obsidian/Dev/Projects/{project}/*.md`
-If a similar note exists, use Edit to append rather than creating a duplicate.
+Always search first: `obsidian vault="Dev" search query="{topic}" limit=5`
+If a similar note exists, use `obsidian vault="Dev" append` rather than creating a duplicate.
 
 ## After Writing
 

@@ -53,6 +53,18 @@
         "description": "Block creation of random .md files - keeps docs consolidated"
       }
     ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/arkstar/.claude/scripts/hooks/obsidian-context.sh",
+            "timeout": 10
+          }
+        ],
+        "description": "Load relevant Obsidian notes for the current project on session start"
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "tool == \"Bash\" && tool_input.command matches \"gh pr create\"",
