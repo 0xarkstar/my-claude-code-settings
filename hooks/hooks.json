@@ -43,28 +43,17 @@
         "description": "Reminder before git push to review changes"
       },
       {
-        "matcher": "tool == \"Write\" && tool_input.file_path matches \"\\\\.(?:md|txt)$\" && \\!(tool_input.file_path matches \"README\\\\.md|CLAUDE\\\\.md|AGENTS\\\\.md|CONTRIBUTING\\\\.md|CHANGELOG\\\\.md|LICENSE\\\\.md|ARCHITECTURE\\\\.md\") && \\!(tool_input.file_path matches \"docs/|.claude/|.omc/|Obsidian/\")",
+        "matcher": "tool == \"Write\" && tool_input.file_path matches \"\\\\.(?:md|txt)$\" && \\!(tool_input.file_path matches \"README\\\\.md|CLAUDE\\\\.md|AGENTS\\\\.md|CONTRIBUTING\\\\.md|CHANGELOG\\\\.md|LICENSE\\\\.md|ARCHITECTURE\\\\.md\") && \\!(tool_input.file_path matches \"docs/|.claude/|.omc/\")",
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';if(/\\.(md|txt)$/.test(p)&&!/(README|CLAUDE|AGENTS|CONTRIBUTING|CHANGELOG|LICENSE|ARCHITECTURE)\\.md$/.test(p)&&!/(docs\\/|\\.claude\\/|\\.omc\\/|Obsidian\\/)/.test(p)){console.error('[Hook] BLOCKED: Unnecessary documentation file creation');console.error('[Hook] File: '+p);console.error('[Hook] Use README.md for documentation instead');process.exit(2)}console.log(d)})\""
+            "command": "node -e \"const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';if(/\\.(md|txt)$/.test(p)&&!/(README|CLAUDE|AGENTS|CONTRIBUTING|CHANGELOG|LICENSE|ARCHITECTURE)\\.md$/.test(p)&&!/(docs\\/|\\.claude\\/|\\.omc\\/)/.test(p)){console.error('[Hook] BLOCKED: Unnecessary documentation file creation');console.error('[Hook] File: '+p);console.error('[Hook] Use README.md for documentation instead');process.exit(2)}console.log(d)})\""
           }
         ],
         "description": "Block creation of random .md files - keeps docs consolidated"
       }
     ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /Users/arkstar/.claude/scripts/hooks/obsidian-context.sh",
-            "timeout": 10
-          }
-        ],
-        "description": "Load relevant Obsidian notes for the current project on session start"
-      }
-    ],
+    "SessionStart": [],
     "PostToolUse": [
       {
         "matcher": "tool == \"Bash\" && tool_input.command matches \"gh pr create\"",
