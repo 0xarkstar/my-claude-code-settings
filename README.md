@@ -3,8 +3,8 @@
 > A battle-tested Claude Code configuration with custom hooks, 7 agents, 25 commands, 30+ skills — designed to work alongside [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC) plugin.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-2.1+-blue.svg)](https://docs.anthropic.com/en/docs/claude-code)
-[![OMC](https://img.shields.io/badge/OMC-4.7.9+-green.svg)](https://github.com/Yeachan-Heo/oh-my-claudecode)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-2.1.79+-blue.svg)](https://docs.anthropic.com/en/docs/claude-code)
+[![OMC](https://img.shields.io/badge/OMC-4.9.0+-green.svg)](https://github.com/Yeachan-Heo/oh-my-claudecode)
 
 Built on top of configurations and ideas from:
 - [everything-claude-code](https://github.com/affaan-m/everything-claude-code) — Anthropic hackathon winner's complete config collection
