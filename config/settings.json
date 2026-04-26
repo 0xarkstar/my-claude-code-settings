@@ -196,7 +196,8 @@
     "dx@ykdojo": true,
     "clangd-lsp@claude-plugins-official": true,
     "oh-my-claudecode@omc": true,
-    "telegram@claude-plugins-official": true
+    "telegram@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "omc": {
@@ -205,5 +206,6 @@
         "url": "https://github.com/Yeachan-Heo/oh-my-claudecode.git"
       }
     }
-  }
+  },
+  "agentPushNotifEnabled": true
 }
