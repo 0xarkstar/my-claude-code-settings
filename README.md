@@ -1,6 +1,6 @@
 # Claude Code Setup
 
-> A battle-tested Claude Code configuration with custom hooks, 7 agents, 25 commands, 30+ skills — designed to work alongside [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC) plugin.
+> A battle-tested Claude Code configuration with custom hooks, 7 agents, 6 rules, 25 commands, 30+ skills — designed to work alongside [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC) plugin.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-2.1.79+-blue.svg)](https://docs.anthropic.com/en/docs/claude-code)
@@ -18,13 +18,13 @@ This repo provides **custom configurations** that complement the OMC plugin:
 | Layer | Source | What It Provides |
 |-------|--------|------------------|
 | **OMC Plugin** | `oh-my-claudecode@omc` | 18 base agents, 27 skills (team, autopilot, ralph, ultrawork, etc.), 11 hook events, CLAUDE.md orchestration prompt |
-| **This Repo** | `claude-code-setup` | 7 custom agents, 8 custom hooks, 7 rules, 25 commands, 30+ skills, MCP templates |
+| **This Repo** | `claude-code-setup` | 7 custom agents, 8 custom hooks, 6 rules, 25 commands, 30+ skills, MCP templates, OMC granular security config |
 
 ```
 ~/.claude/
 ├── settings.json              # Permissions, env vars, plugins (incl. OMC)
 ├── agents/                    # 7 custom + 18 OMC agents (merged)
-├── rules/                     # 7 global rules (loaded into system prompt)
+├── rules/                     # 6 global rules (loaded into system prompt)
 ├── hooks/
 │   └── hooks.json             # 8 custom hooks (2 events) — OMC hooks are separate
 ├── commands/                  # 25 slash commands
@@ -93,17 +93,16 @@ These are custom workflow hooks that complement OMC's orchestration hooks:
 
 > OMC provides orchestration hooks (keyword detection, context safety, session management, etc.) via the plugin — no overlap with these custom hooks.
 
-### Rules (7)
+### Rules (6)
 
 | Rule | Focus |
 |------|-------|
 | `coding-style.md` | Immutability, file organization (<800 lines), error handling |
+| `engineering.md` | Think before coding, simplicity first, surgical changes, tiered testing policy |
 | `git-workflow.md` | Conventional commits, PR workflow, feature implementation |
-| `karpathy-guidelines.md` | Think before coding, simplicity first, surgical changes |
-| `performance.md` | Model selection strategy, context window management |
-| `security.md` | Secret management, input validation, OWASP checklist |
-| `testing.md` | 80% coverage minimum, TDD workflow, test types |
 | `mcp-priority.md` | SearXNG + Crawl4AI local stack preferred over cloud APIs |
+| `orchestration.md` | 3-lane delegation policy — main loop, Claude subagents, Codex executor |
+| `security.md` | Secret management, input validation, OWASP checklist |
 
 ### Commands (25)
 
@@ -179,6 +178,10 @@ Fallback -> WebSearch (built-in) / Firecrawl   rate-limited, costs money
 ```
 
 Use `config/claude.json.template` as a starting point for your `~/.claude.json`.
+
+## OMC Security Config
+
+`config/claude-omc.config.jsonc` installs to `~/.config/claude-omc/config.jsonc` and applies granular OMC hardening (auto-update pinning, iteration caps, restricted tool paths) without the blanket `OMC_SECURITY=strict` mode, which disables project skills and remote MCP servers.
 
 ## Permissions
 

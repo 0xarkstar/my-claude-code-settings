@@ -153,12 +153,20 @@ if ! $DRY_RUN; then
 fi
 
 # Step 1: Settings
-log "Step 1/7: Core settings"
+log "Step 1/8: Core settings"
 backup_file "$CLAUDE_DIR/settings.json"
 copy_file "$SCRIPT_DIR/config/settings.json" "$CLAUDE_DIR/settings.json" "settings.json"
 
+# Step 1b: OMC granular security config
+OMC_CONFIG_DIR="$HOME/.config/claude-omc"
+backup_file "$OMC_CONFIG_DIR/config.jsonc"
+if ! $DRY_RUN; then
+  mkdir -p "$OMC_CONFIG_DIR"
+fi
+copy_file "$SCRIPT_DIR/config/claude-omc.config.jsonc" "$OMC_CONFIG_DIR/config.jsonc" "claude-omc config.jsonc"
+
 # Step 2: Agents (custom only — OMC provides 18 base agents via plugin)
-log "Step 2/7: Custom agent definitions"
+log "Step 2/8: Custom agent definitions"
 if [[ -d "$CLAUDE_DIR/agents" ]]; then
   info "Existing agents dir found — merging custom agents only"
 fi
@@ -172,12 +180,12 @@ for agent_file in "$SCRIPT_DIR/agents"/*.md; do
 done
 
 # Step 3: Rules
-log "Step 3/7: Global rules"
+log "Step 3/8: Global rules"
 backup_dir "$CLAUDE_DIR/rules"
 copy_dir "$SCRIPT_DIR/rules" "$CLAUDE_DIR/rules" "rules"
 
 # Step 4: Hooks (custom only — OMC provides orchestration hooks via plugin)
-log "Step 4/7: Custom hooks"
+log "Step 4/8: Custom hooks"
 backup_file "$CLAUDE_DIR/hooks/hooks.json"
 if ! $DRY_RUN; then
   mkdir -p "$CLAUDE_DIR/hooks"
@@ -185,7 +193,7 @@ fi
 copy_file "$SCRIPT_DIR/hooks/hooks.json" "$CLAUDE_DIR/hooks/hooks.json" "hooks.json"
 
 # Step 5: Scripts
-log "Step 5/7: Scripts"
+log "Step 5/8: Scripts"
 backup_dir "$CLAUDE_DIR/scripts"
 copy_dir "$SCRIPT_DIR/scripts" "$CLAUDE_DIR/scripts" "scripts"
 
@@ -196,12 +204,12 @@ if ! $DRY_RUN; then
 fi
 
 # Step 6: Commands
-log "Step 6/7: Slash commands"
+log "Step 6/8: Slash commands"
 backup_dir "$CLAUDE_DIR/commands"
 copy_dir "$SCRIPT_DIR/commands" "$CLAUDE_DIR/commands" "commands"
 
 # Step 7: Skills
-log "Step 7/7: Skills"
+log "Step 7/8: Skills"
 if [[ -d "$CLAUDE_DIR/skills" ]]; then
   info "Existing skills dir found — merging custom skills only"
 fi
@@ -239,6 +247,7 @@ if ! $DRY_RUN; then
   echo ""
   echo "  Agents:    $(find "$CLAUDE_DIR/agents" -name "*.md" | wc -l | tr -d ' ') files"
   echo "  Rules:     $(find "$CLAUDE_DIR/rules" -name "*.md" | wc -l | tr -d ' ') files"
+  echo "  OMC config: $OMC_CONFIG_DIR/config.jsonc"
   echo "  Commands:  $(find "$CLAUDE_DIR/commands" -name "*.md" | wc -l | tr -d ' ') files"
   echo "  Scripts:   $(find "$CLAUDE_DIR/scripts" -type f | wc -l | tr -d ' ') files"
   echo "  Skills:    $(find "$CLAUDE_DIR/skills" -maxdepth 1 -type d | tail -n +2 | wc -l | tr -d ' ') packages"

@@ -1,0 +1,15 @@
+// User-level OMC security hardening — NON-strict mode (overrides defaults freely).
+// Deliberately NOT OMC_SECURITY=strict: strict hard-blocks every non-claude
+// `omc ask` provider (kills the Sol lane + ccg), silently disables project
+// skills and remote MCP, and config can only tighten it, never relax.
+// Upstream SECURITY.md endorses granular keys for selective hardening.
+// Context: ~/.claude/rules/orchestration.md + playbook Addendum C (2026-07-23).
+{
+  "security": {
+    "disableAutoUpdate": true,   // version pinning — upgrades stay deliberate/manual
+    "hardMaxIterations": 200,    // bound persistent loops (ralph/autopilot class)
+    "restrictToolPaths": true    // confine OMC ast/file tools to the project root
+    // Omitted on purpose: disableExternalLLM (keeps codex + ccg alive),
+    // disableRemoteMcp (keeps c4ai-sse etc.), disableProjectSkills, pythonSandbox.
+  }
+}
