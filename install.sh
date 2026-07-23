@@ -203,6 +203,22 @@ if ! $DRY_RUN; then
   log "Set executable permissions on .sh files"
 fi
 
+# Step 5b: Hook guard scripts → ~/.local/bin (referenced by settings.json hooks)
+log "Step 5b: Hook guard scripts (sol-gate, orchestration-tripwire)"
+LOCAL_BIN="$HOME/.local/bin"
+if ! $DRY_RUN; then
+  mkdir -p "$LOCAL_BIN"
+fi
+for bin_file in "$SCRIPT_DIR/scripts/bin"/*.py; do
+  [[ -f "$bin_file" ]] || continue
+  bin_name=$(basename "$bin_file")
+  backup_file "$LOCAL_BIN/$bin_name"
+  copy_file "$bin_file" "$LOCAL_BIN/$bin_name" "bin: $bin_name"
+done
+if ! $DRY_RUN; then
+  find "$LOCAL_BIN" -maxdepth 1 -name "*.py" \( -name "sol-gate*" -o -name "orchestration-tripwire*" \) -exec chmod +x {} \;
+fi
+
 # Step 6: Commands
 log "Step 6/8: Slash commands"
 backup_dir "$CLAUDE_DIR/commands"
@@ -232,6 +248,11 @@ if ! $DRY_RUN; then
     sed -i '' "s|\\\$HOME/.claude/|$CLAUDE_DIR/|g" "$CLAUDE_DIR/hooks/hooks.json" 2>/dev/null || \
     sed -i "s|\\\$HOME/.claude/|$CLAUDE_DIR/|g" "$CLAUDE_DIR/hooks/hooks.json" 2>/dev/null || true
     log "Updated hook script paths for your environment"
+  fi
+  if [[ -f "$CLAUDE_DIR/settings.json" ]]; then
+    sed -i '' "s|/Users/arkstar/|$HOME/|g" "$CLAUDE_DIR/settings.json" 2>/dev/null || \
+    sed -i "s|/Users/arkstar/|$HOME/|g" "$CLAUDE_DIR/settings.json" 2>/dev/null || true
+    log "Rewrote settings.json hook paths to \$HOME"
   fi
 fi
 

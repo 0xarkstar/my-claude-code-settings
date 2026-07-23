@@ -156,6 +156,28 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/arkstar/.local/bin/orchestration-tripwire.py count-edit",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/arkstar/.local/bin/sol-gate.py",
+            "timeout": 10
+          }
+        ]
       }
     ]
   },

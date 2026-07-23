@@ -45,9 +45,10 @@ WINS. Procedures/config/templates: Z1
      collect evidence, ask the user). One primary writer; others read-mostly.
    - Fable re-verifies every Sol diff against the original contract — never
      trust the summary. If Codex/OMX is unavailable, fall back to lane 2 at
-     ≤opus — not to inline. Trial through 2026-08-16 (since 07-23 it
-     evaluates the OMX-worktree lane). After 2026-08-16: treat lane 3 as
-     unconfirmed — do NOT auto-dispatch Sol; ask the user first.
+     ≤opus — not to inline. PERMANENT as of 2026-07-23 (user decision; the
+     ~08-16 trial clause is retired). Standing check instead of expiry:
+     after any omx/codex upgrade, re-verify lane assumptions (profile files,
+     config-rewrite gotcha, -p passthrough) before heavy dispatch.
 
 ## OMC surface (reduced 07-23)
 - USE: `/deep-interview`, `/ralplan`. `/team` only when an irreversible
@@ -98,6 +99,24 @@ the first call, with Fable doing only synthesis and follow-up on anomalies.
 to decide the next step. A read you merely display is trivial; a read you act
 on is substantive. Read-only parallel fan-out purely for orientation is
 trivial. When in doubt, it counts.
+
+## Sol-gate enforcement (added 07-23 after compliance audit)
+The 07-23 audit found the Sol lane silently bypassed: implementation fixes
+went straight to Claude `executor` with no omx attempt. This is a CRITICAL
+policy failure, now mechanically enforced:
+- **`sol-gate` PreToolUse hook** (`~/.local/bin/sol-gate.py`, matcher
+  Task|Agent): dispatching the Claude implementation lane
+  (`oh-my-claudecode:executor` / `debugger` / `test-engineer`) is
+  HARD-BLOCKED unless the prompt carries `SOL-FALLBACK: <one-line reason>`.
+  The marker is the audit trail. Valid reasons ONLY: (a) Codex/OMX verified
+  unavailable right now, (b) the user explicitly directed a Claude-side pass.
+- **Dispatch-time procedure**: implementation/tests/debugging → FIRST
+  `omx --worktree=sol/<task> [--xhigh]` (ultra: `omx exec -w sol/<task>
+  -p ultra`); only after a real unavailability check, the Claude fallback
+  with the marker.
+- **Tripwire widened**: Edit/Write/MultiEdit to non-allowed paths now count
+  in the same per-turn counter as Bash (allowed config/memory paths exempt),
+  so inline multi-file implementation trips the same alarm.
 
 ## Verification discipline
 - Author ≠ approver: writer pass and review pass are separate lanes.
