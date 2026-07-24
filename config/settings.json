@@ -50,6 +50,7 @@
       "Bash(curl:*)",
       "Bash(tar:*)",
       "Bash(gh:*)",
+      "Bash(omx:*)",
       "mcp__pencil"
     ],
     "deny": [
