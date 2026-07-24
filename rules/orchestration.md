@@ -100,16 +100,27 @@ to decide the next step. A read you merely display is trivial; a read you act
 on is substantive. Read-only parallel fan-out purely for orientation is
 trivial. When in doubt, it counts.
 
-## Sol-gate enforcement (added 07-23 after compliance audit)
+## Sol-gate enforcement (v2 2026-07-24; v1 07-23 after compliance audit)
 The 07-23 audit found the Sol lane silently bypassed: implementation fixes
-went straight to Claude `executor` with no omx attempt. This is a CRITICAL
-policy failure, now mechanically enforced:
+went straight to Claude `executor` with no omx attempt. A 07-24 re-audit
+found the marker self-issued and generalist-agent bypasses. Now mechanically
+enforced by **sol-gate v2**:
 - **`sol-gate` PreToolUse hook** (`~/.local/bin/sol-gate.py`, matcher
-  Task|Agent): dispatching the Claude implementation lane
-  (`oh-my-claudecode:executor` / `debugger` / `test-engineer`) is
-  HARD-BLOCKED unless the prompt carries `SOL-FALLBACK: <one-line reason>`.
-  The marker is the audit trail. Valid reasons ONLY: (a) Codex/OMX verified
-  unavailable right now, (b) the user explicitly directed a Claude-side pass.
+  Task|Agent): dispatching the Claude implementation lane is HARD-BLOCKED
+  unless the prompt carries a structured evidence marker. Gated: hard —
+  `oh-my-claudecode:executor` / `debugger` / `test-engineer`; heuristic —
+  `general-purpose` / `claude` / default dispatches whose prompt reads as
+  implementation (implement / fix the bug / refactor / 구현해 / 고쳐줘 …).
+  Analysis dispatches escape the heuristic by stating READ-ONLY / "do not
+  edit" in the prompt.
+- **Marker v2** (bare `SOL-FALLBACK: <reason>` is REJECTED):
+  `SOL-FALLBACK(a): <the failing omx/codex command AND its error output,
+  quoted from THIS turn, ≥40 chars>` — run the probe first, paste what it
+  printed; or `SOL-FALLBACK(b): <the user's directive as a verbatim "quote",
+  ≥10 chars>` — paraphrase is not evidence. The evidence IS the audit trail.
+  On a second consecutive classifier block, stop retrying with reinforced
+  markers — present the user the 3 options (allow rule / `! omx` / explicit
+  Claude-side directive).
 - **Dispatch-time procedure**: implementation/tests/debugging → FIRST
   `omx --worktree=sol/<task> [--xhigh]` (ultra: `omx exec -w sol/<task>
   -p ultra`); only after a real unavailability check, the Claude fallback
