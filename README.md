@@ -9,7 +9,7 @@
 Built on top of configurations and ideas from:
 - [everything-claude-code](https://github.com/affaan-m/everything-claude-code) — Anthropic hackathon winner's complete config collection
 - [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) — Karpathy's coding guidelines as Claude Code skills
-- [claude-code-tips](https://github.com/ykdojo/claude-code-tips) — Practical tips and the `dx` plugin
+- [claude-code-tips](https://github.com/ykdojo/claude-code-tips) — Practical tips and the `dx` plugin (ideas only; no upstream code is redistributed here. The upstream repo is All Rights Reserved, so install `dx` from there if you want half-clone, handoff or gha.)
 
 ## Architecture
 
