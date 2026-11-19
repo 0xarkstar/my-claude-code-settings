@@ -1,112 +1,23 @@
 {
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "ENABLE_TOOL_SEARCH": "true"
+    "OMC_QUIET": "2",
+    "OMC_PREEMPTIVE_COMPACTION_WARNING_PERCENT": "100",
+    "OMC_PREEMPTIVE_COMPACTION_CRITICAL_PERCENT": "100"
   },
   "permissions": {
-    "allow": [
-      "Read",
-      "Edit",
-      "MultiEdit",
-      "Write",
-      "Glob",
-      "Grep",
-      "WebFetch",
-      "WebSearch",
-      "Bash(git:*)",
-      "Bash(npm:*)",
-      "Bash(pnpm:*)",
-      "Bash(npx:*)",
-      "Bash(node:*)",
-      "Bash(python:*)",
-      "Bash(pip:*)",
-      "Bash(ts-node:*)",
-      "Bash(pytest:*)",
-      "Bash(vitest:*)",
-      "Bash(playwright:*)",
-      "Bash(turbo:*)",
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(mkdir:*)",
-      "Bash(touch:*)",
-      "Bash(find:*)",
-      "Bash(grep:*)",
-      "Bash(rg:*)",
-      "Bash(echo:*)",
-      "Bash(sed:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(mv:*)",
-      "Bash(cp:*)",
-      "Bash(chmod:*)",
-      "Bash(make:*)",
-      "Bash(cd:*)",
-      "Bash(wc:*)",
-      "Bash(which:*)",
-      "Bash(env:*)",
-      "Bash(sort:*)",
-      "Bash(uniq:*)",
-      "Bash(diff:*)",
-      "Bash(curl:*)",
-      "Bash(tar:*)",
-      "Bash(gh:*)",
-      "Bash(omx:*)",
-      "mcp__pencil"
-    ],
     "deny": [
       "Bash(rm -rf /)",
       "Bash(rm -rf ~)",
       "Bash(sudo:*)",
-      "Read(**/.env)",
-      "Read(**/.env.local)",
-      "Read(**/.env.development)",
-      "Read(**/.env.production)",
-      "Read(**/.env.staging)",
-      "Read(**/.env.testnet)",
-      "Read(**/.env.mainnet)",
       "Read(**/secrets/**)",
       "Bash(chmod 777:*)",
-      "Read(**/.env.backup)",
-      "Read(**/.env.secret)",
-      "Read(**/.env.keys)",
-      "Read(**/.env.old)",
-      "Read(**/.env.bak)",
-      "Write(**/.claude/settings*)",
-      "Edit(**/.claude/settings*)",
-      "Write(**/.claude/hooks/**)",
-      "Edit(**/.claude/hooks/**)",
-      "Write(**/.claude/scripts/**)",
-      "Edit(**/.claude/scripts/**)",
-      "Bash(env *OMC_SKIP*:*)",
-      "Bash(env *DISABLE_OMC*:*)",
-      "Bash(export OMC_SKIP*:*)",
-      "Bash(export DISABLE_OMC*:*)",
+      "Bash(env *OMC_SKIP*)",
+      "Bash(env *DISABLE_OMC*)",
+      "Bash(export OMC_SKIP*)",
+      "Bash(export DISABLE_OMC*)",
       "Bash(ssh localhost:*)",
       "Bash(ssh 127.0.0.1:*)",
-      "Write(**/.env)",
-      "Edit(**/.env)",
-      "Write(**/.env.local)",
-      "Edit(**/.env.local)",
-      "Write(**/.env.development)",
-      "Edit(**/.env.development)",
-      "Write(**/.env.production)",
-      "Edit(**/.env.production)",
-      "Write(**/.env.staging)",
-      "Edit(**/.env.staging)",
-      "Write(**/.env.testnet)",
-      "Edit(**/.env.testnet)",
-      "Write(**/.env.mainnet)",
-      "Edit(**/.env.mainnet)",
-      "Write(**/.env.backup)",
-      "Edit(**/.env.backup)",
-      "Write(**/.env.secret)",
-      "Edit(**/.env.secret)",
-      "Write(**/.env.keys)",
-      "Edit(**/.env.keys)",
-      "Write(**/.env.old)",
-      "Edit(**/.env.old)",
-      "Write(**/.env.bak)",
-      "Edit(**/.env.bak)",
       "Read(**/.ssh/**)",
       "Read(**/id_rsa*)",
       "Read(**/id_ed25519*)",
@@ -114,97 +25,96 @@
       "Read(**/.gnupg/**)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
-      "Read(**/credentials.json)"
+      "Read(**/credentials.json)",
+      "Read(**/*.env)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.claude/.omc-config.json)",
+      "Read(~/.secrets/**)",
+      "Read(~/.codex/auth.json)",
+      "Read(~/.gemini/oauth_creds.json)",
+      "Read(~/.config/gh/**)",
+      "Read(~/.docker/config.json)",
+      "Bash(omx *--madmax*)",
+      "Bash(omx *--yolo*)",
+      "Bash(codex *--yolo*)",
+      "Bash(codex *--dangerously-bypass-approvals-and-sandbox*)",
+      "Bash(codex *danger-full-access*)",
+      "Read(~/.ssh/id_*)",
+      "Read(~/.aws/**)",
+      "Bash(python*.ssh/id_*)",
+      "Bash(python*.codex/auth.json*)",
+      "Bash(python*.claude/.credentials.json*)",
+      "Bash(python*.aws/credentials*)",
+      "Bash(python*.config/gh/hosts.yml*)",
+      "Bash(jq *.codex/auth.json*)",
+      "Bash(jq *.claude/.credentials.json*)",
+      "Bash(omx *danger-full-access*)",
+      "Bash(omx *dangerously-bypass*)",
+      "Bash(omc ask*codex*)",
+      "Bash(omc setup*)",
+      "Bash(oh-my-claudecode setup*)",
+      "Bash(omc-cli setup*)",
+      "Bash(omc install*)",
+      "Bash(oh-my-claudecode install*)",
+      "Bash(omc-cli install*)",
+      "Bash(omc team*:codex*)",
+      "Bash(oh-my-claudecode team*:codex*)",
+      "Bash(omc-cli team*:codex*)",
+      "Bash(oh-my-claudecode ask*codex*)",
+      "Bash(omc-cli ask*codex*)",
+      "Skill(oh-my-claudecode:omc-setup)",
+      "Read(//**/.env)",
+      "Edit(//**/.env)",
+      "Read(//**/.env.local)",
+      "Edit(//**/.env.local)",
+      "Read(//**/.env.*.local)",
+      "Edit(//**/.env.*.local)",
+      "Read(//**/.env.production)",
+      "Edit(//**/.env.production)",
+      "Read(//**/.env.development)",
+      "Edit(//**/.env.development)",
+      "Read(//**/.env.staging)",
+      "Edit(//**/.env.staging)",
+      "Read(//**/.env.test)",
+      "Edit(//**/.env.test)",
+      "Read(//**/.env.prod)",
+      "Edit(//**/.env.prod)",
+      "Read(//**/.env.dev)",
+      "Edit(//**/.env.dev)",
+      "Read(//**/.env.testnet)",
+      "Edit(//**/.env.testnet)",
+      "Read(//**/.env.mainnet)",
+      "Edit(//**/.env.mainnet)",
+      "Read(//**/.env.backup)",
+      "Edit(//**/.env.backup)",
+      "Read(//**/.env.bak)",
+      "Edit(//**/.env.bak)",
+      "Read(//**/.env.old)",
+      "Edit(//**/.env.old)",
+      "Read(//**/.env.secret)",
+      "Edit(//**/.env.secret)",
+      "Read(//**/.env.keys)",
+      "Edit(//**/.env.keys)"
     ],
     "ask": [
       "Bash(git push:*)",
       "Bash(git push *)",
       "Bash(git force:*)",
-      "Bash(docker:*)"
-    ],
-    "defaultMode": "auto"
-  },
-  "model": "claude-fable-5[1m]",
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/arkstar/.local/bin/memory-nag.sh"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 /Users/arkstar/.local/bin/orchestration-tripwire.py reset",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 /Users/arkstar/.local/bin/orchestration-tripwire.py count",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 /Users/arkstar/.local/bin/orchestration-tripwire.py count-edit",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Task|Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 /Users/arkstar/.local/bin/sol-gate.py",
-            "timeout": 10
-          }
-        ]
-      }
+      "Bash(docker:*)",
+      "Bash(omx setup*)",
+      "Bash(omx update*)",
+      "Edit(~/.claude/rules/**)",
+      "Edit(~/.codex/*.toml)",
+      "Write(**/.claude/settings*)",
+      "Edit(**/.claude/settings*)",
+      "Write(**/.claude/hooks/**)",
+      "Edit(**/.claude/hooks/**)",
+      "Write(**/.claude/scripts/**)",
+      "Edit(**/.claude/scripts/**)",
+      "Edit(~/.claude/hooks/**)",
+      "Edit(~/.claude/settings*)",
+      "Edit(~/.local/bin/sol-gate.py)",
+      "Edit(~/.local/bin/c4ai-mcp-stdio)"
     ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "sh ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hud/omc-hud-cache.sh ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hud/omc-hud.mjs"
-  },
-  "enabledPlugins": {
-    "dx@ykdojo": false,
-    "clangd-lsp@claude-plugins-official": false,
-    "oh-my-claudecode@omc": true,
-    "telegram@claude-plugins-official": true,
-    "vercel@claude-plugins-official": false,
-    "security-guidance@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true
-  },
-  "extraKnownMarketplaces": {
-    "omc": {
-      "source": {
-        "source": "git",
-        "url": "https://github.com/Yeachan-Heo/oh-my-claudecode.git"
-      }
-    }
-  },
-  "tui": "fullscreen",
-  "skipWorkflowUsageWarning": true,
-  "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true
+  }
 }

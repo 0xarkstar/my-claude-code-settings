@@ -1,0 +1,67 @@
+# Shape of the parts of ~/.codex/config.toml that rules/orchestration.md (Safety) relies on.
+#
+# WARNING. This profile removes Codex's work sandbox: Codex can write anywhere and use the
+# network. What protects secrets is only the list of denied paths below plus the guidance in
+# AGENTS.md, and that is weaker than the sandbox: a list can never be complete. Do not copy
+# this unless that trade is what you want. If you do, the list below is a MINIMUM EXAMPLE,
+# not a complete one: add every place on your machine where a key or a login token lives.
+#
+# This is an example, not the live file: the live table is generated from lists of the
+# secret locations on one machine, and those lists are not published.
+
+model = "gpt-6.2-sol"
+model_reasoning_effort = "high"
+approval_policy = "on-request"
+
+default_permissions = "open"
+
+[shell_environment_policy]
+# Variables that are not passed on to commands Codex starts.
+exclude = ["OMC_TELEGRAM_BOT_TOKEN", "CLAUDE_CODE_MESSAGING_TOKEN"]
+
+[permissions.open]
+description = "Open work access with protections for secret stores and configuration files."
+
+[permissions.open.filesystem]
+":root" = "write"
+
+# Key and login-token stores: unreadable.
+"~/.aws" = "deny"
+"~/.gnupg" = "deny"
+"~/.secrets" = "deny"
+"~/.netrc" = "deny"
+"~/.ssh/id_ed25519" = "deny"            # private keys only; the SSH config stays readable
+"~/.ssh/id_rsa" = "deny"
+"~/.config/gh" = "deny"
+"~/.docker/config.json" = "deny"        # when it holds inline registry credentials
+"~/.codex/auth.json" = "deny"
+"~/.gemini/oauth_creds.json" = "deny"
+"~/.claude/.credentials.json" = "deny"
+"~/.claude.json" = "deny"               # MCP server keys
+"~/.zsh_history" = "deny"               # may hold a command typed with a token
+
+# Files that carry the policy or run later: readable, not writable.
+"~/.codex/config.toml" = "read"
+"~/.codex/AGENTS.md" = "read"
+"~/.codex/high.config.toml" = "read"    # one entry per profile file
+"~/.claude/settings.json" = "read"
+"~/.claude/rules" = "read"
+"~/.claude/hooks" = "read"
+"~/.zshrc" = "read"                     # readable: keep tokens out of shell startup files
+"~/Library/LaunchAgents" = "read"
+
+[permissions.open.network]
+enabled = true
+
+# Notes from applying this on Codex CLI 0.166.0:
+# - Deny by path, not by pattern: a pattern also blocks creating matching files and breaks
+#   dependency unpacking.
+# - Do not set sandbox_mode next to this profile (in the base config or in a profile file):
+#   it switches Codex back to the legacy sandbox.
+# - Codex and other programs rewrite config.toml (trust entries, re-serialisation), so nothing
+#   should depend on the file's bytes, spacing or comments. Check the policy by content, and
+#   confirm it on the real CLI: the thread store records the policy each run started with.
+# - The Codex documentation says that approved escalations use their own controls: assume a
+#   command you approve to run outside the profile is not bound by this deny list.
+# - Project .env files stay readable in this setup by the owner's choice; they are covered by
+#   guidance in AGENTS.md only.

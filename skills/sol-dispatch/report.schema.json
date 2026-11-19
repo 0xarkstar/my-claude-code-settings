@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "files_changed", "gates", "acceptance", "self_review_changes", "assumptions", "contract_problems", "open_items"],
+  "properties": {
+    "status": {"type": "string", "enum": ["done", "partial", "blocked"]},
+    "files_changed": {"type": "array", "items": {"type": "string"}},
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "result", "detail"],
+        "properties": {
+          "command": {"type": "string"},
+          "result": {"type": "string", "enum": ["pass", "fail", "not_run"]},
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "met", "evidence"],
+        "properties": {
+          "id": {"type": "string"},
+          "met": {"type": "boolean"},
+          "evidence": {"type": "string"}
+        }
+      }
+    },
+    "self_review_changes": {"type": "string"},
+    "assumptions": {"type": "array", "items": {"type": "string"}},
+    "contract_problems": {"type": "array", "items": {"type": "string"}},
+    "open_items": {"type": "array", "items": {"type": "string"}}
+  }
+}

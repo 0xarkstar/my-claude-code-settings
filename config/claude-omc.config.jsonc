@@ -9,7 +9,16 @@
     "disableAutoUpdate": true,   // version pinning — upgrades stay deliberate/manual
     "hardMaxIterations": 200,    // bound persistent loops (ralph/autopilot class)
     "restrictToolPaths": true    // confine OMC ast/file tools to the project root
-    // Omitted on purpose: disableExternalLLM (keeps codex + ccg alive),
+    // Omitted on purpose: disableExternalLLM (keeps `omc ask codex` alive; ccg retired in 5.0),
     // disableRemoteMcp (keeps c4ai-sse etc.), disableProjectSkills, pythonSandbox.
+  },
+  "keywordDetector": {
+    // 2026-07-23: hard-disable banned Tier-0 triggers (orchestration.md ban);
+    // one canonical name also kills its aliases (ulw/uw, KR/JP variants).
+    // 2026-10-28 (5.7.19): re-verified via direct hook runs — autopilot (EN/KR)
+    // and ralph (EN/KR) blocked; deep-interview/ralplan still route. 5.0 removed
+    // the ultrawork keyword (ulw/uw = retired no-ops): entry kept as an inert guard.
+    // ultragoal: auto-trigger off; explicit /oh-my-claudecode:ultragoal still loads the skill.
+    "disabled": ["autopilot", "ralph", "ultrawork", "ultragoal"]
   }
 }

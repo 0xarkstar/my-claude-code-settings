@@ -1,0 +1,3 @@
+# ~/.codex/fast.config.toml   →  codex -p fast   (cheap mechanical edits / lookups)
+model = "gpt-6.1-terra"
+model_reasoning_effort = "medium"

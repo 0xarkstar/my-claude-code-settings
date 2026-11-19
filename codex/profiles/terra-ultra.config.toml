@@ -1,0 +1,3 @@
+# ~/.codex/terra-ultra.config.toml →  codex -p terra-ultra (Terra fan-out; QUOTA-HEAVY, time-box it)
+model = "gpt-6.1-terra"
+model_reasoning_effort = "ultra"

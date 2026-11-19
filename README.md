@@ -1,212 +1,161 @@
 # Claude Code Setup
 
-> A battle-tested Claude Code configuration with custom hooks, 7 agents, 6 rules, 25 commands, 30+ skills — designed to work alongside [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC) plugin.
+> A sanitized mirror of one working Claude Code + Codex setup: global rules, lean lane agents, a Codex dispatch skill, Codex guidance and a permission model. It runs alongside the [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC) plugin.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-2.1.79+-blue.svg)](https://docs.anthropic.com/en/docs/claude-code)
-[![OMC](https://img.shields.io/badge/OMC-4.9.0+-green.svg)](https://github.com/Yeachan-Heo/oh-my-claudecode)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-2.1.326-blue.svg)](https://docs.anthropic.com/en/docs/claude-code)
+[![OMC](https://img.shields.io/badge/OMC-5.7.29-green.svg)](https://github.com/Yeachan-Heo/oh-my-claudecode)
+[![Codex CLI](https://img.shields.io/badge/Codex_CLI-0.166.0-lightgrey.svg)](https://github.com/openai/codex)
 
-Built on top of configurations and ideas from:
-- [everything-claude-code](https://github.com/affaan-m/everything-claude-code) — Anthropic hackathon winner's complete config collection
-- [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) — Karpathy's coding guidelines as Claude Code skills
-- [claude-code-tips](https://github.com/ykdojo/claude-code-tips) — Practical tips and the `dx` plugin (ideas only; no upstream code is redistributed here. The upstream repo is All Rights Reserved, so install `dx` from there if you want half-clone, handoff or gha.)
+The live setup is the source of truth; this repository is copied from it by hand. Addresses, home paths and project names are removed on the way.
 
-## Architecture
+**Sync status.** Rules, agents, skills, Codex guidance, the permission model (deny and ask rules, environment flags) and the OMC config match the live setup of 2026-11-19. `config/claude.json.template` is an older example, not a copy of the live file.
 
-This repo provides **custom configurations** that complement the OMC plugin:
+**Read before installing.** These are one person's rules. `rules/orchestration.md` tells the session to reply in Korean and to serve the owner's main project; `rules/mcp-priority.md` gives commands for a self-hosted search stack with a placeholder address and an SSH alias. Change what does not fit you, or leave those two files out.
 
-| Layer | Source | What It Provides |
-|-------|--------|------------------|
-| **OMC Plugin** | `oh-my-claudecode@omc` | 18 base agents, 27 skills (team, autopilot, ralph, ultrawork, etc.), 11 hook events, CLAUDE.md orchestration prompt |
-| **This Repo** | `claude-code-setup` | 7 custom agents, 8 custom hooks, 6 rules, 25 commands, 30+ skills, MCP templates, OMC granular security config |
+## How the setup works
+
+| Who | Does what |
+|-----|-----------|
+| **Main Claude session** | Holds the owner's intent, splits the work, accepts or rejects results. Talks to the owner. |
+| **Claude subagents (lanes)** | Investigation, critique and review that need Claude. Three lean lane types load no global rules; the brief carries the rules. |
+| **Codex** | Default executor for implementation, tests and debugging: one task = one branch = one git worktree = one writer, started headless with `codex exec`. |
+| **OMC plugin** | Base agents and workflow skills the rules refer to (plan, execute, review, verify and others). |
+
+The judgement rules are in `rules/orchestration.md`; the recipes are in `skills/sol-dispatch/SKILL.md`. Most rules in `orchestration.md` name who decided them and on what evidence, so a rule can be dropped when its cause is gone.
 
 ```
-~/.claude/
-├── settings.json              # Permissions, env vars, plugins (incl. OMC)
-├── agents/                    # 7 custom + 18 OMC agents (merged)
-├── rules/                     # 6 global rules (loaded into system prompt)
-├── hooks/
-│   └── hooks.json             # 8 custom hooks (2 events) — OMC hooks are separate
-├── commands/                  # 25 slash commands
-├── scripts/
-│   ├── hooks/ensure-coauthor.sh  # Git commit Co-Authored-By enforcement
-│   ├── *.sh                      # Utility scripts
-│   └── ci/                       # 5 CI validation scripts
-└── skills/                    # 30+ skill packages (merged with OMC plugin skills)
+claude-code-setup/
+├── rules/                  # 6 global rules (loaded into every session)
+├── agents/                 # 3 lean lane agents
+├── skills/
+│   ├── sol-dispatch/       # Codex dispatch, resume, record and verification recipes + report schemas
+│   └── memory-write/       # rules for writing to the file-based memory
+├── codex/
+│   ├── AGENTS.md           # global guidance for Codex
+│   ├── profiles/           # 9 model/effort profiles (codex -p <name>)
+│   └── config.example.toml # shape of the permissions profile (example, not the live file)
+├── config/
+│   ├── settings.json       # permission model: deny and ask rules, environment flags
+│   ├── claude-omc.config.jsonc
+│   └── claude.json.template
+├── scripts/                # two optional helper scripts (not wired to any hook)
+└── install.sh
 ```
 
 ## Quick Start
 
 ```bash
-# 1. Clone and install custom config
+# 1. Clone and install (existing files are backed up; an existing settings.json is left alone)
 git clone https://github.com/YOUR_USERNAME/claude-code-setup.git
 cd claude-code-setup
+bash install.sh --dry-run   # preview
 bash install.sh
 
-# 2. Install OMC plugin (in a Claude Code session)
+# 2. Install the OMC plugin (in a Claude Code session)
 /plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode
 /plugin install oh-my-claudecode
-
-# 3. Install OMC CLI
-npm install -g oh-my-claude-sisyphus@latest
-omc install
 ```
 
-Use `--dry-run` to preview changes without modifying anything:
-
-```bash
-bash install.sh --dry-run
-```
+Codex files are not installed by the script. Copy `codex/AGENTS.md` and `codex/profiles/*.config.toml` to `~/.codex/` yourself, and read `codex/config.example.toml` before changing your Codex permissions.
 
 ## What's Included
-
-### Custom Agents (7)
-
-Language/tool specialists that have no OMC equivalent:
-
-| Model | Agent | Purpose |
-|-------|-------|---------|
-| **Sonnet** | `e2e-runner` | Playwright E2E test generation and execution |
-| **Sonnet** | `refactor-cleaner` | Dead code detection (knip, depcheck, ts-prune) |
-| **Sonnet** | `python-reviewer` | PEP 8, type hints, ruff/mypy/bandit checks |
-| **Haiku** | `database-reviewer` | PostgreSQL optimization, schema review, RLS |
-| **Haiku** | `doc-updater` | Documentation and codemap generation |
-| **Haiku** | `go-reviewer` | Idiomatic Go, concurrency, error handling review |
-| **Haiku** | `go-build-resolver` | Go build/vet error resolution |
-
-> OMC provides 18 base agents (architect, planner, executor, code-reviewer, etc.) via the plugin.
-
-### Custom Hooks (8 hooks, 2 events)
-
-These are custom workflow hooks that complement OMC's orchestration hooks:
-
-| Event | Hook | Function |
-|-------|------|----------|
-| **PreToolUse** | dev server block | Block `npm run dev` etc. outside tmux (exit 1) |
-| **PreToolUse** | tmux reminder | Warn when long-running commands run outside tmux |
-| **PreToolUse** | ensure-coauthor | Block git commit without `Co-Authored-By` trailer (exit 2) |
-| **PreToolUse** | git push review | Reminder before git push |
-| **PreToolUse** | md file block | Block creation of random .md/.txt files |
-| **PostToolUse** | PR URL logger | Log PR URL after `gh pr create` |
-| **PostToolUse** | Prettier format | Auto-format JS/TS files after edits (async) |
-| **PostToolUse** | TypeScript check | Run `tsc --noEmit` after TS edits (async) |
-
-> OMC provides orchestration hooks (keyword detection, context safety, session management, etc.) via the plugin — no overlap with these custom hooks.
 
 ### Rules (6)
 
 | Rule | Focus |
 |------|-------|
-| `coding-style.md` | Immutability, file organization (<800 lines), error handling |
-| `engineering.md` | Think before coding, simplicity first, surgical changes, tiered testing policy |
-| `git-workflow.md` | Conventional commits, PR workflow, feature implementation |
-| `mcp-priority.md` | SearXNG + Crawl4AI local stack preferred over cloud APIs |
-| `orchestration.md` | 3-lane delegation policy — main loop, Claude subagents, Codex executor |
-| `security.md` | Secret management, input validation, OWASP checklist |
+| `orchestration.md` | When a turn may end, choosing a chain (Claude alone, Claude lanes, Codex), model and effort, verification, what counts as working or stalled, safety, tool facts. |
+| `engineering.md` | Think before coding, simplicity first, surgical changes, goal-driven execution, testing by code tier. |
+| `coding-style.md` | File organisation, error handling, language-specific notes. |
+| `git-workflow.md` | Commit format, pull requests, review before merge, deploy by known commit. |
+| `security.md` | Secrets, input validation, what to do when a security issue is found. |
+| `mcp-priority.md` | Search and page-reading order: the lightest tool that gets the page; a self-hosted SearXNG + Crawl4AI stack. |
 
-### Commands (25)
+### Lane agents (3)
 
-| Command | Description |
-|---------|-------------|
-| `/plan` | Requirements analysis and implementation plan |
-| `/tdd` | Enforce TDD (RED, GREEN, REFACTOR) |
-| `/code-review` | Code review with agent |
-| `/build-fix` | Fix build errors |
-| `/test-coverage` | Coverage analysis |
-| `/e2e` | E2E test generation (Playwright) |
-| `/refactor-clean` | Dead code cleanup |
-| `/checkpoint` | Save checkpoint |
-| `/verify` | Run verification |
-| `/orchestrate` | Multi-agent orchestration |
-| `/sessions` | Session management |
-| `/learn` | Extract patterns |
-| `/skill-create` | Create skill from patterns |
-| `/evolve` | Evolve instincts into skills |
-| `/python-review` | Python code review |
-| `/go-review` / `/go-build` / `/go-test` | Go workflows |
-| `/update-codemaps` / `/update-docs` | Documentation |
-| `/eval` | Session evaluation |
-| `/setup-pm` | Package manager detection |
-| `/instinct-*` | Instinct management (status, export, import) |
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| `lane-read` | Sonnet | Read-only measurement, recounts, searches, documentation lookup. Writes only its report. |
+| `lane-review` | Opus | Separate approval pass: adversarial verification and critique of work someone else produced. |
+| `lane-lead` | Sonnet | Coordinator: fans work out to sub-lanes (and Codex when the brief gives the recipe) and returns one reconciled report. |
 
-### Skills (30+)
+All three set `omitClaudeMd: true`: they start without the global instruction files, so every brief names the rules the worker must follow.
 
-**Web**: `frontend-patterns`, `backend-patterns`, `coding-standards`
+### Skills (2)
 
-**Python**: `python-patterns`, `python-testing`, `django-patterns`, `django-security`, `django-tdd`, `django-verification`
+| Skill | Purpose |
+|-------|---------|
+| `sol-dispatch` | Written in Korean. Headless `codex exec` templates, a pre-dispatch contract check, the one-writer-per-worktree liveness check, resume, a one-line dispatch record read from the Codex thread store, and JSON schemas for the final report and for reviews. |
+| `memory-write` | Rewrite-not-append rules for the file-based memory and its index. |
 
-**Go**: `golang-patterns`, `golang-testing`
+### Codex
 
-**Java/Spring**: `springboot-patterns`, `springboot-security`, `springboot-tdd`, `jpa-patterns`, `java-coding-standards`
+- `codex/AGENTS.md`: what the executor may and may not do when no sandbox encloses it: the contract is the task, boundaries, how to change code, secrets, the final message.
+- `codex/profiles/`: `luna`, `high`, `xhigh`, `astra`, `ultra`, `max`, `fast`, `terra-max`, `terra-ultra`. Headless dispatches always name a profile, so that a model switch in an interactive session does not leak into them.
+- `codex/config.example.toml`: the shape of the permissions profile: no work sandbox, network on, secret stores denied by path, policy files read-only. The live table is generated from lists of secret locations on one machine and is not published.
 
-**Database**: `postgres-patterns`, `clickhouse-io`
+### Permissions (`config/settings.json`)
 
-**Security**: `security-review` (includes cloud infrastructure security)
+The file holds the permission model and four environment flags, nothing else: no allow list, model, plugins or status line (those are personal choices).
 
-**Workflow**: `tdd-workflow`, `verification-loop`, `eval-harness`, `iterative-retrieval`, `strategic-compact`
+- **Deny** (88 rules): destructive commands, `sudo`, key and login stores, sixteen `.env` file names (templates such as `.env.example` stay readable), Codex and OMX flags that bypass approvals, `omc setup` / `omc install` (they overwrite hand-maintained config from a stale registry file).
+- **Ask** (18 rules): `git push`, `docker`, and edits of settings, hooks, rules and Codex config files: these ask for confirmation instead of being refused.
+- **Environment flags**: agent teams on, quiet OMC output, and the OMC "plan a /compact soon" warning switched off by setting both of its thresholds to 100.
 
-**Learning**: `continuous-learning-v2` (instinct-based system with observer agent and CLI)
+The deny list also blocks OMC's own setup (`omc setup`, `omc install`, the `omc-setup` skill). The cause is specific to the owner's machine. If you are setting OMC up for the first time, run its setup before you add these rules, or leave those rules out.
 
-## MCP Servers
+Read rules cover the file tools. A shell command can still read a file, so the list also denies a few known shell routes to the key stores; beyond that, the guidance in the rules is what holds.
 
-### Global (16 servers, configured in `~/.claude.json`)
+`install.sh` copies this file only when you have no `~/.claude/settings.json`. To add the rules to an existing file (your own values win for the environment flags):
 
-| Server | Type | Description |
-|--------|------|-------------|
-| `github` | HTTP | GitHub Copilot MCP (PRs, issues, repos) |
-| `firecrawl` | stdio | Web scraping — `firecrawl_agent` only (500 credits limited) |
-| `supabase` | HTTP | Supabase database, auth, storage |
-| `vercel` | HTTP | Vercel deployment |
-| `railway` | stdio | Railway deployment |
-| `cloudflare-*` | HTTP | Docs, Workers builds, bindings, observability |
-| `clickhouse` | HTTP | ClickHouse analytics |
-| `magic` | stdio | Magic UI components |
-| `filesystem` | stdio | Filesystem operations |
-| `sequential-thinking` | stdio | Structured reasoning chains |
-| `context7` | stdio | Live documentation lookup |
-| `c4ai-sse` | SSE | Crawl4AI via Docker (localhost:11235) — primary scraping tool |
-| `playwright` | stdio | Playwright browser automation |
-
-### MCP Priority: Local Stack First
-
-The `mcp-priority.md` rule enforces a **SearXNG + Crawl4AI** local workflow over cloud APIs:
-
-```
-Search  ->  SearXNG (curl localhost:8888)     free, unlimited, local
-Scrape  ->  Crawl4AI (c4ai-sse MCP)           free, unlimited, local
-Fallback -> WebSearch (built-in) / Firecrawl   rate-limited, costs money
+```bash
+jq -s '.[0] as $mine | .[1] as $ref | $mine
+  | .env = (($ref.env // {}) + ($mine.env // {}))
+  | .permissions.deny = ((($mine.permissions.deny // []) + $ref.permissions.deny) | unique)
+  | .permissions.ask  = ((($mine.permissions.ask  // []) + $ref.permissions.ask)  | unique)' \
+  ~/.claude/settings.json config/settings.json > settings.merged.json
+# read settings.merged.json, then move it over ~/.claude/settings.json
 ```
 
-Use `config/claude.json.template` as a starting point for your `~/.claude.json`.
+### Hooks in the live setup (not shipped)
 
-## OMC Security Config
+The live setup runs four hooks. Their scripts belong to a private tool, so `config/settings.json` here has no hook entries; the table describes what they do.
 
-`config/claude-omc.config.jsonc` installs to `~/.config/claude-omc/config.jsonc` and applies granular OMC hardening (auto-update pinning, iteration caps, restricted tool paths) without the blanket `OMC_SECURITY=strict` mode, which disables project skills and remote MCP servers.
+| Event | Hook | Function |
+|-------|------|----------|
+| SessionStart | memory nag | Speaks only when the memory index exceeds 180 lines or an automatic curation commit awaits the owner's veto. |
+| SessionStart | lane verify | Checks the Codex permissions profile, the secret-store denies, the read-only paths, the environment exclusions and model/effort drift in the Codex thread store. |
+| PreToolUse (`Task\|Agent`) | sol gate | Implementation work goes to Codex; a Claude fallback needs a marker with evidence that Codex really failed or that the owner said so. |
+| PreToolUse (`Bash`) | dispatch gate | A headless `codex exec` must close standard input. |
 
-## Permissions
+Two things that were removed after measuring them: a tool-call counter that warned the main session to delegate (586 warnings, no confirmed shift to delegation), and a five-minute scheduled run of the verify hook (its desktop notifications led to no correction that the session-start check did not also report).
 
-The `settings.json` includes a carefully tuned permission model:
+### Scripts
 
-- **Allow**: Read, Edit, Write, Glob, Grep, WebFetch, WebSearch, and common CLI tools (git, npm, python, etc.)
-- **Deny**: `rm -rf /`, `rm -rf ~`, `sudo`, reading `.env` files (12 variants)
-- **Ask**: `git push`, `docker` commands
-- **Default Mode**: `acceptEdits`
+Two optional helpers that nothing here wires up: `scripts/hooks/ensure-coauthor.sh` blocks a `git commit` without a `Co-Authored-By` trailer when you register it as a PreToolUse hook, and `scripts/cleanup-team-panes.sh` closes leftover tmux panes of OMC tmux teams.
 
-## Plugins
+### OMC config
 
-| Plugin | Source | Purpose |
-|--------|--------|---------|
-| `oh-my-claudecode@omc` | [GitHub](https://github.com/Yeachan-Heo/oh-my-claudecode) | Multi-agent orchestration (team, autopilot, ralph, ultrawork) |
-| `dx@ykdojo` | [GitHub](https://github.com/ykdojo/claude-code-tips) | Developer experience (clone, half-clone, handoff, gha) |
-| `clangd-lsp` | claude-plugins-official | C/C++ language server |
+`config/claude-omc.config.jsonc` installs to `~/.config/claude-omc/config.jsonc`. It turns OMC's auto-update off, caps persistent loops at 200 iterations, restricts OMC's file tools to the project root, and disables the keyword triggers for `autopilot`, `ralph`, `ultrawork` and `ultragoal`: those modes run when the owner calls them, not because a phrase in a message happened to match.
 
-## Customization
+### MCP servers
 
-- **Add agents**: Create `.md` files in `agents/` with frontmatter (name, description, tools, model)
-- **Add rules**: Create `.md` files in `rules/` — they're loaded into every session's system prompt
-- **Add commands**: Create `.md` files in `commands/` — accessible via `/command-name`
-- **Add hooks**: Edit `hooks/hooks.json` — custom hooks run alongside OMC plugin hooks
-- **Add skills**: Create directories in `skills/` with a `SKILL.md` file
+The live setup uses four servers: `c4ai-sse` (Crawl4AI through a stdio launcher), `playwright`, `cloudflare-docs` and `pencil`. `config/claude.json.template` is an older, broader example, not a copy of the live file.
+
+## Not included
+
+- The hook scripts and the generator of the Codex permissions table (private tool).
+- Third-party skills used in the live setup. Install them from their upstream repositories.
+- The allow list, model choice, plugins and status line of the live settings.
+- Personal research and publishing skills, and the memory content itself.
+
+## Credits
+
+Ideas from:
+- [everything-claude-code](https://github.com/affaan-m/everything-claude-code)
+- [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills): the basis of `rules/engineering.md`, which quotes parts of it (its README states MIT)
+- [claude-code-tips](https://github.com/ykdojo/claude-code-tips): ideas only; no upstream code is redistributed here (the upstream repository is All Rights Reserved)
 
 ## License
 

@@ -1,0 +1,3 @@
+# ~/.codex/high.config.toml  →  codex -p high  (default Sol lane; pins model/effort so base-config rewrites from interactive sessions don't leak into dispatches)
+model = "gpt-6.2-sol"
+model_reasoning_effort = "high"

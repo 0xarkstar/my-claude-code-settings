@@ -1,0 +1,3 @@
+# ~/.codex/ultra.config.toml  →  codex -p ultra  (4-subagent fan-out; Plus+; QUOTA-HEAVY, time-box it)
+model = "gpt-6.2-sol"
+model_reasoning_effort = "ultra"

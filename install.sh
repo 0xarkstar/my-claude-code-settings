@@ -3,7 +3,8 @@ set -euo pipefail
 
 # Claude Code Setup Installer
 # Copies configuration files to ~/.claude/ with backup support
-# Works alongside OMC (oh-my-claudecode) plugin — custom hooks only
+# Works alongside the OMC (oh-my-claudecode) plugin. The Codex files in codex/ are not installed:
+# copy them by hand (see README).
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
@@ -28,6 +29,7 @@ usage() {
   echo ""
   echo "This script installs Claude Code configuration files to ~/.claude/"
   echo "Existing files are backed up with a .backup.TIMESTAMP extension."
+  echo "An existing settings.json is left as it is (see README, Permissions, for a merge command)."
   echo ""
   echo "For OMC (oh-my-claudecode) orchestration, install the plugin separately:"
   echo "  /plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode"
@@ -126,10 +128,6 @@ if $DRY_RUN; then
 fi
 
 # Check prerequisites
-if ! command -v node &>/dev/null; then
-  warn "Node.js not found. Some hook scripts require Node.js."
-fi
-
 if ! command -v npx &>/dev/null; then
   warn "npx not found. MCP servers require npx."
 fi
@@ -137,7 +135,7 @@ fi
 # Confirm installation
 if ! $DRY_RUN && ! $FORCE; then
   echo "This will install Claude Code configuration to: $CLAUDE_DIR"
-  echo "Existing files will be backed up."
+  echo "Existing files will be backed up; an existing settings.json is not replaced."
   echo ""
   read -rp "Continue? [y/N] " confirm
   if [[ "$confirm" != [yY] ]]; then
@@ -153,9 +151,12 @@ if ! $DRY_RUN; then
 fi
 
 # Step 1: Settings
-log "Step 1/8: Core settings"
-backup_file "$CLAUDE_DIR/settings.json"
-copy_file "$SCRIPT_DIR/config/settings.json" "$CLAUDE_DIR/settings.json" "settings.json"
+log "Step 1/5: Core settings"
+if [[ -f "$CLAUDE_DIR/settings.json" ]]; then
+  warn "settings.json exists: left as it is. To add the deny and ask rules, see README (Permissions)."
+else
+  copy_file "$SCRIPT_DIR/config/settings.json" "$CLAUDE_DIR/settings.json" "settings.json"
+fi
 
 # Step 1b: OMC granular security config
 OMC_CONFIG_DIR="$HOME/.config/claude-omc"
@@ -165,8 +166,8 @@ if ! $DRY_RUN; then
 fi
 copy_file "$SCRIPT_DIR/config/claude-omc.config.jsonc" "$OMC_CONFIG_DIR/config.jsonc" "claude-omc config.jsonc"
 
-# Step 2: Agents (custom only — OMC provides 18 base agents via plugin)
-log "Step 2/8: Custom agent definitions"
+# Step 2: Agents (lean lane agents; OMC provides its own agents via the plugin)
+log "Step 2/5: Lane agent definitions"
 if [[ -d "$CLAUDE_DIR/agents" ]]; then
   info "Existing agents dir found — merging custom agents only"
 fi
@@ -176,24 +177,19 @@ fi
 for agent_file in "$SCRIPT_DIR/agents"/*.md; do
   [[ -f "$agent_file" ]] || continue
   agent_name=$(basename "$agent_file")
+  if [[ -f "$CLAUDE_DIR/agents/$agent_name" ]] && ! cmp -s "$agent_file" "$CLAUDE_DIR/agents/$agent_name"; then
+    backup_file "$CLAUDE_DIR/agents/$agent_name"
+  fi
   copy_file "$agent_file" "$CLAUDE_DIR/agents/$agent_name" "agent: $agent_name"
 done
 
 # Step 3: Rules
-log "Step 3/8: Global rules"
+log "Step 3/5: Global rules"
 backup_dir "$CLAUDE_DIR/rules"
 copy_dir "$SCRIPT_DIR/rules" "$CLAUDE_DIR/rules" "rules"
 
-# Step 4: Hooks (custom only — OMC provides orchestration hooks via plugin)
-log "Step 4/8: Custom hooks"
-backup_file "$CLAUDE_DIR/hooks/hooks.json"
-if ! $DRY_RUN; then
-  mkdir -p "$CLAUDE_DIR/hooks"
-fi
-copy_file "$SCRIPT_DIR/hooks/hooks.json" "$CLAUDE_DIR/hooks/hooks.json" "hooks.json"
-
-# Step 5: Scripts
-log "Step 5/8: Scripts"
+# Step 4: Scripts
+log "Step 4/5: Scripts"
 backup_dir "$CLAUDE_DIR/scripts"
 copy_dir "$SCRIPT_DIR/scripts" "$CLAUDE_DIR/scripts" "scripts"
 
@@ -203,29 +199,8 @@ if ! $DRY_RUN; then
   log "Set executable permissions on .sh files"
 fi
 
-# Step 5b: Hook guard scripts → ~/.local/bin (referenced by settings.json hooks)
-log "Step 5b: Hook guard scripts (sol-gate, orchestration-tripwire)"
-LOCAL_BIN="$HOME/.local/bin"
-if ! $DRY_RUN; then
-  mkdir -p "$LOCAL_BIN"
-fi
-for bin_file in "$SCRIPT_DIR/scripts/bin"/*.py; do
-  [[ -f "$bin_file" ]] || continue
-  bin_name=$(basename "$bin_file")
-  backup_file "$LOCAL_BIN/$bin_name"
-  copy_file "$bin_file" "$LOCAL_BIN/$bin_name" "bin: $bin_name"
-done
-if ! $DRY_RUN; then
-  find "$LOCAL_BIN" -maxdepth 1 -name "*.py" \( -name "sol-gate*" -o -name "orchestration-tripwire*" \) -exec chmod +x {} \;
-fi
-
-# Step 6: Commands
-log "Step 6/8: Slash commands"
-backup_dir "$CLAUDE_DIR/commands"
-copy_dir "$SCRIPT_DIR/commands" "$CLAUDE_DIR/commands" "commands"
-
-# Step 7: Skills
-log "Step 7/8: Skills"
+# Step 5: Skills
+log "Step 5/5: Skills"
 if [[ -d "$CLAUDE_DIR/skills" ]]; then
   info "Existing skills dir found — merging custom skills only"
 fi
@@ -235,26 +210,23 @@ fi
 for skill_dir in "$SCRIPT_DIR/skills"/*/; do
   [[ -d "$skill_dir" ]] || continue
   skill_name=$(basename "$skill_dir")
+  if [[ -d "$CLAUDE_DIR/skills/$skill_name" ]] && ! diff -rq "$skill_dir" "$CLAUDE_DIR/skills/$skill_name" >/dev/null 2>&1; then
+    # The old copy goes outside skills/: a folder left there would load as a second skill.
+    skill_backup="$CLAUDE_DIR/skills.backup.$(date +%Y%m%d_%H%M%S)"
+    if $DRY_RUN; then
+      info "Would backup skill: $skill_name -> $skill_backup/"
+    else
+      mkdir -p "$skill_backup"
+      cp -r "$CLAUDE_DIR/skills/$skill_name" "$skill_backup/"
+      info "Backed up skill: $skill_name -> $skill_backup/"
+    fi
+  fi
   if ! $DRY_RUN; then
     mkdir -p "$CLAUDE_DIR/skills/$skill_name"
     cp -r "$skill_dir"* "$CLAUDE_DIR/skills/$skill_name/" 2>/dev/null || true
   fi
   log "Installed skill: $skill_name"
 done
-
-# Fix hook script paths (replace hardcoded paths with $HOME)
-if ! $DRY_RUN; then
-  if [[ -f "$CLAUDE_DIR/hooks/hooks.json" ]]; then
-    sed -i '' "s|\\\$HOME/.claude/|$CLAUDE_DIR/|g" "$CLAUDE_DIR/hooks/hooks.json" 2>/dev/null || \
-    sed -i "s|\\\$HOME/.claude/|$CLAUDE_DIR/|g" "$CLAUDE_DIR/hooks/hooks.json" 2>/dev/null || true
-    log "Updated hook script paths for your environment"
-  fi
-  if [[ -f "$CLAUDE_DIR/settings.json" ]]; then
-    sed -i '' "s|/Users/arkstar/|$HOME/|g" "$CLAUDE_DIR/settings.json" 2>/dev/null || \
-    sed -i "s|/Users/arkstar/|$HOME/|g" "$CLAUDE_DIR/settings.json" 2>/dev/null || true
-    log "Rewrote settings.json hook paths to \$HOME"
-  fi
-fi
 
 echo ""
 echo "════════════════════════════════════════"
@@ -269,7 +241,6 @@ if ! $DRY_RUN; then
   echo "  Agents:    $(find "$CLAUDE_DIR/agents" -name "*.md" | wc -l | tr -d ' ') files"
   echo "  Rules:     $(find "$CLAUDE_DIR/rules" -name "*.md" | wc -l | tr -d ' ') files"
   echo "  OMC config: $OMC_CONFIG_DIR/config.jsonc"
-  echo "  Commands:  $(find "$CLAUDE_DIR/commands" -name "*.md" | wc -l | tr -d ' ') files"
   echo "  Scripts:   $(find "$CLAUDE_DIR/scripts" -type f | wc -l | tr -d ' ') files"
   echo "  Skills:    $(find "$CLAUDE_DIR/skills" -maxdepth 1 -type d | tail -n +2 | wc -l | tr -d ' ') packages"
 fi
@@ -277,13 +248,14 @@ fi
 echo ""
 warn "Post-install checklist:"
 echo ""
-echo "  1. OMC Plugin (required for team/autopilot/ralph/ultrawork):"
+echo "  0. The rules were written for one owner. Read ~/.claude/rules/orchestration.md and"
+echo "     mcp-priority.md and change what does not fit you: the reply language, the project"
+echo "     line, and the search host (the placeholder <tailscale-ip>, the ssh alias)."
+echo ""
+echo "  1. OMC Plugin (base agents and skills the rules refer to):"
 echo "     In a Claude Code session, run:"
 echo "       /plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode"
 echo "       /plugin install oh-my-claudecode"
-echo "     Then install the npm CLI:"
-echo "       npm install -g oh-my-claude-sisyphus@latest"
-echo "       omc install"
 echo ""
 echo "  2. MCP Servers — Edit ~/.claude.json using config/claude.json.template"
 echo "     - Set FIRECRAWL_API_KEY (or remove firecrawl server)"
@@ -291,8 +263,11 @@ echo "     - Set filesystem path to your projects directory"
 echo "     - Run: gh auth login (for GitHub Copilot MCP)"
 echo ""
 echo "  3. Docker services (optional):"
-echo "     docker run -d --name crawl4ai --restart unless-stopped -p 11235:11235 --shm-size=1g unclecode/crawl4ai:latest"
-echo "     docker run -d --name searxng --restart unless-stopped -p 8888:8080 searxng/searxng:latest"
+echo "     docker run -d --name crawl4ai --restart unless-stopped -p 127.0.0.1:11235:11235 --shm-size=1g unclecode/crawl4ai:latest"
+echo "     docker run -d --name searxng --restart unless-stopped -p 127.0.0.1:8888:8080 searxng/searxng:latest"
 echo ""
-echo "  4. Restart Claude Code to load all configurations"
+echo "  4. Codex (optional): copy codex/AGENTS.md and codex/profiles/*.config.toml to ~/.codex/,"
+echo "     and use codex/config.example.toml as a guide for the permissions profile."
+echo ""
+echo "  5. Restart Claude Code to load all configurations"
 echo ""

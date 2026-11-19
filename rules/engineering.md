@@ -4,14 +4,15 @@ Behavioral guardrails against common LLM coding mistakes (after Karpathy), plus 
 tiered testing policy. Bias toward caution; for trivial tasks use judgment.
 
 ## 1. Think before coding
-- State assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them — don't pick silently.
+- State assumptions explicitly. If uncertain, take the reading you would recommend, state it and act; ask the owner only for a hard-to-undo action or a taste only the owner holds.
+- If multiple interpretations exist, pick the one you would recommend, name the others in one line and state the choice — don't pick silently.
 - If a simpler approach exists, say so. Push back when warranted.
 
 ## 2. Simplicity first
 - Minimum code that solves the problem. Nothing speculative.
 - No features beyond what was asked; no abstractions for single-use code; no configurability nobody requested; no error handling for impossible scenarios.
 - If 200 lines could be 50, rewrite it. "Would a senior engineer call this overcomplicated?" If yes, simplify.
+- (This section came from a community template in March 2026; the owner kept it on 2026-11-19.)
 
 ## 3. Surgical changes
 - Touch only what the task requires. Don't refactor, reformat, or "improve" adjacent code that isn't broken.
@@ -29,7 +30,7 @@ Match rigor to what the code is, not a blanket rule.
 - **Production / infra / anything holding real value or running unattended** (bots on OCI, live services, SDKs others depend on, anything touching money or auth): TDD, meaningful unit + integration coverage (~80% where it buys confidence), E2E on critical flows. Fix the implementation, not the test — unless the test is wrong.
 - **Prototypes, research spikes, personal tools, one-off scripts**: judgment. Write the tests that would actually catch a regression you care about; skip ceremony. A failing repro test for a real bug is always worth it; 80%-of-everything is not.
 
-Rule of thumb: the stronger the blast radius (money, unattended runtime, shared dependency), the closer to full TDD+coverage. The more throwaway/experimental, the more Simplicity-First (§2) wins over coverage targets. When unsure which tier, ask.
+Rule of thumb: the stronger the blast radius (money, unattended runtime, shared dependency), the closer to full TDD+coverage. The more throwaway/experimental, the more Simplicity-First (§2) wins over coverage targets. When unsure which tier, take the higher-rigor tier that fits the blast radius, state it and go on.
 
 ---
-Working if: fewer unnecessary diff lines, fewer overcomplication rewrites, clarifying questions before mistakes rather than after.
+Working if: fewer unnecessary diff lines, fewer overcomplication rewrites, stated assumptions before mistakes rather than after.

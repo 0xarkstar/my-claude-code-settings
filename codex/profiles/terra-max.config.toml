@@ -1,0 +1,3 @@
+# ~/.codex/terra-max.config.toml   →  codex -p terra-max   (Terra single-agent max; effort research 2026-11-02)
+model = "gpt-6.1-terra"
+model_reasoning_effort = "max"
