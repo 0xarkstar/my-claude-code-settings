@@ -25,7 +25,8 @@ description = "Open work access with protections for secret stores and configura
 [permissions.open.filesystem]
 ":root" = "write"
 
-# Key and login-token stores: unreadable.
+# Key and login-token stores: unreadable. Match this to every secret location you have;
+# the list should cover at least what your Claude Code deny rules cover.
 "~/.aws" = "deny"
 "~/.gnupg" = "deny"
 "~/.secrets" = "deny"
@@ -33,22 +34,48 @@ description = "Open work access with protections for secret stores and configura
 "~/.ssh/id_ed25519" = "deny"            # private keys only; the SSH config stays readable
 "~/.ssh/id_rsa" = "deny"
 "~/.config/gh" = "deny"
+"~/.config/crawl4ai" = "deny"           # an API token file of a self-hosted service
 "~/.docker/config.json" = "deny"        # when it holds inline registry credentials
+"~/.cargo/credentials.toml" = "deny"
 "~/.codex/auth.json" = "deny"
 "~/.gemini/oauth_creds.json" = "deny"
 "~/.claude/.credentials.json" = "deny"
+"~/.claude/.omc-config.json" = "deny"   # notification tokens
 "~/.claude.json" = "deny"               # MCP server keys
 "~/.zsh_history" = "deny"               # may hold a command typed with a token
+"~/.bash_history" = "deny"
 
-# Files that carry the policy or run later: readable, not writable.
+# Everything that carries the policy, steers a later run, or is executed later: readable,
+# not writable. With ":root" = "write", anything missing here can be rewritten by a run.
+# Codex itself (the folder as a whole must stay writable: sessions and state live there)
 "~/.codex/config.toml" = "read"
 "~/.codex/AGENTS.md" = "read"
-"~/.codex/high.config.toml" = "read"    # one entry per profile file
+"~/.codex/skills" = "read"
+"~/.codex/prompts" = "read"
+"~/.codex/high.config.toml" = "read"    # one entry for EVERY profile file you have
+"~/.codex/xhigh.config.toml" = "read"
+# Claude Code
 "~/.claude/settings.json" = "read"
+"~/.claude/CLAUDE.md" = "read"
 "~/.claude/rules" = "read"
 "~/.claude/hooks" = "read"
-"~/.zshrc" = "read"                     # readable: keep tokens out of shell startup files
+"~/.claude/agents" = "read"
+"~/.claude/skills" = "read"
+"~/.claude/commands" = "read"
+"~/.claude/plugins" = "read"
+# Shell startup files (readable, so keep tokens out of them)
+"~/.zshenv" = "read"
+"~/.zprofile" = "read"
+"~/.zshrc" = "read"
+"~/.zlogin" = "read"
+"~/.bashrc" = "read"
+"~/.bash_profile" = "read"
+"~/.profile" = "read"
+# Git configuration and hooks, launch agents, your own bin folder (hook scripts, MCP launchers)
+"~/.gitconfig" = "read"
+"~/.config/git" = "read"
 "~/Library/LaunchAgents" = "read"
+"~/.local/bin" = "read"
 
 [permissions.open.network]
 enabled = true
