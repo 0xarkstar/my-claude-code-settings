@@ -33,9 +33,9 @@ description: Codex Sol로 구현·테스트·디버깅을 디스패치하거나,
   - `## Assumptions`: 계약이 기대는 환경 사실을 한 줄에 하나씩, 어디서 언제 읽었는지와 함께 적는다. 사전 점검은 각 줄을 지금 상태와, 그 시각 뒤에 내려진 결정(규칙·설정·메모리의 변경)에 대조한다.
 
 ## 실행 원장 (시험, 2026-11-19 ~ 12-03)
-- 여러 단위이거나 자리를 비우는 요청이면 main checkout에 `.omc/plans/<request>.ledger.md`를 둔다. 맨 위에 요청의 완료 조건을 검사 형태로 적고, 그 아래에 단위와 띄운 실행(Codex 스레드 또는 Claude 에이전트)마다 한 줄을 둔다: `<UTC> | <단위> | <실행 id> | <worktree 또는 -> | dispatched|finished|accepted | <근거 경로>`.
-- 줄은 디스패치하거나 수락하는 그 호출에서 덧붙인다(Record와 같은 방식). 깨어날 때, 압축 뒤, 새 세션에서는 원장을 먼저 읽는다. accepted 단위는 다시 하지 않고, finished 줄은 결과물에 검사를 돌려 수락하거나 수리한다.
-- 잴 것: 깨어났을 때 수락되지 않은 채 발견된 finished 줄 수, 실행 종료부터 수락까지 걸린 시간.
+- 여러 단위이거나 자리를 비우는 요청이면 main checkout에 `.omc/plans/<request>.ledger.md`를 둔다. 맨 위에 요청의 완료 조건을 검사 형태로 적고, 그 아래에 단위와 띄운 실행(Codex 스레드 또는 Claude 에이전트)마다 한 줄을 둔다: `<UTC> | <단위> | <실행 id> | <worktree 또는 -> | <기준: 기본 브랜치 또는 올라탄 단위> | dispatched|finished|accepted|merged | <근거 경로>`.
+- 줄은 디스패치하거나 수락하는 그 호출에서 덧붙인다(Record와 같은 방식). 깨어날 때, 압축 뒤, 새 세션에서는 원장을 먼저 읽는다. accepted 단위는 다시 하지 않고, finished 줄은 결과물에 검사를 돌려 수락하거나 수리한다. accepted인데 merged가 아닌 단위가 병합 대기다(Worktree / 커밋 / 검증).
+- 잴 것: 깨어났을 때 수락되지 않은 채 발견된 finished 줄 수, 실행 종료부터 수락까지 걸린 시간, 병합을 물을 때 대기 중인 단위 수와 쌓인 깊이.
 
 ## 결정 기록 (시험, 2026-11-19 ~ 12-03)
 - 원장 옆에 `.omc/plans/<request>.decisions.tsv`를 둔다. 원장은 이어받는 에이전트가 읽는 실행 상태이고, 이 파일은 소유자가 나중에 판단을 검토하려고 읽는 것이라 따로 둔다. 프로젝트가 정해지지 않은 요청은 그 요청의 산출물 폴더에 둔다.
@@ -71,6 +71,8 @@ description: Codex Sol로 구현·테스트·디버깅을 디스패치하거나,
 ## Worktree / 커밋 / 검증
 - 태스크 1개 = `sol/<task>` 브랜치 1개 = worktree 1개 = writer 1명이다.
 - 게이트가 통과하면 Codex가 task 브랜치에 커밋한다. 메인 세션은 `git diff <base>..<branch>`로 변경(`.husky/`, `.pre-commit-config.yaml`, package.json scripts 포함)을 보고, 그 커밋에서 게이트를 다시 돌려 통과를 확인한다. 커밋 확인 전에 `git -C <wt> rev-parse --abbrev-ref HEAD`가 `sol/<task>`이고 `git -C <wt> status --porcelain`이 비어 있는지 본다. 아니면 그 상태를 보고서와 대조하고 남은 변경을 결과에 포함해 판단한다. 기본 브랜치 병합은 소유자 확인을 기다린다.
+- 병합 대기(orchestration.md Safety, 2026-11-19): 수락된 단위는 원장에 accepted로 두고 다른 일을 계속한다. 병합 때문에 멈추지 않고, 질문을 빠뜨리지도 않는다. 보고마다 대기 목록을 적고, 소유자가 대화에 들어오면 맨 먼저 대기 중인 확인을 한 질문으로 묻는다. 단위가 쌓여 있으면 아래부터 수락된 구간 전체를 묻고, 그 구간의 맨 위 단위와 그 위에 남는 단위 수를 밝힌다. 승인되면 기본 브랜치를 그 지점까지 fast-forward하고 원장에 merged를 적은 뒤, 새 단위는 기본 브랜치에서 시작한다.
+- 병합 질문에는 그 병합으로 지울 수 있는 worktree 목록을 붙인다: `git worktree list`와 `git -C <wt> status --porcelain`으로 변경 없음 / 미추적 파일만 있음(파일 이름) / 수정 있음으로 나누고, HANDOFF나 계약이 재사용한다고 적은 worktree는 뺀다. 병합 승인은 변경 없는 worktree의 제거까지 포함하고, 나머지는 따로 묻는다.
 - worktree 제거는 병합과 소유자 OK 뒤에만 한다. 순서: `git -C <wt> status --porcelain --ignored`의 `!!`·`??` 경로를 tar로 보존 → `git worktree remove <wt>`(`--force` 없이) → `git branch -d` → `git worktree prune`. 제거한 사실을 기록에 남긴다.
 
 ## Claude 폴백
