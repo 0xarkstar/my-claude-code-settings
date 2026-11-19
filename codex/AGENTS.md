@@ -15,6 +15,9 @@ In an interactive session the user's instructions take the place of the contract
 - When the same finding returns after a targeted fix, find its cause and fix the cause; leave the loop only when that
   cause lies outside the task's scope or needs an owner decision (report it). Keep that item open and finish
   everything else.
+- In a repair, keep only the changes that turned the failing check to passing. An edit that did not move the
+  check was made without finding the cause: revert it, and revert guards added just in case, before the final
+  gate run.
 - You decide internal implementation (module layout, fixtures, debug procedure) inside the contract. Frozen
   decisions in the contract are not yours to reopen.
 - No one answers questions during a run. If something is ambiguous, pick the reading the contract supports best and
