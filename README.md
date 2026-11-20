@@ -9,7 +9,7 @@
 
 The live setup is the source of truth; this repository is copied from it by hand. Addresses, home paths and project names are removed on the way.
 
-**Sync status.** Rules, agents, skills, Codex guidance, the permission model (deny and ask rules, environment flags) and the OMC config match the live setup of 2026-11-19. `config/claude.json.template` is an older example, not a copy of the live file.
+**Sync status.** Rules, agents, skills, Codex guidance, the permission model (deny and ask rules, environment flags) and the OMC config match the live setup of 2026-11-21. `config/claude.json.template` is an older example, not a copy of the live file.
 
 **Read before installing.** These are one person's rules. `rules/orchestration.md` tells the session to reply in Korean and to serve the owner's main project; `rules/mcp-priority.md` gives commands for a self-hosted search stack with a placeholder address and an SSH alias. Change what does not fit you, or leave those two files out.
 

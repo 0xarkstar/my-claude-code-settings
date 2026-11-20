@@ -3,7 +3,7 @@ name: sol-dispatch
 description: Codex Sol로 구현·테스트·디버깅을 디스패치하거나, 끊긴 실행을 재개(resume)·재디스패치·폴백하기 직전에 로드한다. codex exec 템플릿(< /dev/null), ultra·장시간용 tmux 런처, writer 1명 생존 확인, 디스패치 기록 한 줄, 완료 후 검증. Load before any Codex dispatch, resume, re-dispatch or fallback.
 ---
 # sol-dispatch (2026-11-18)
-판단 규칙은 `~/.claude/rules/orchestration.md`가 정본이고, 여기에는 레시피만 둔다. Z1 플레이북의 디스패치 예시와 다르면 이 파일을 따른다. 샌드박스·권한 플래그는 디스패치에 붙이지 않는다. 정책은 Codex config(샌드박스 없음, 비밀 위치 deny 목록)와 `~/.codex/AGENTS.md`가 담는다.
+판단 규칙은 `~/.claude/rules/orchestration.md`가 정본이고, 여기에는 레시피만 둔다. Z1 플레이북의 디스패치 예시와 다르면 이 파일을 따른다. 샌드박스·권한 플래그는 디스패치에 붙이지 않는다. 읽기 레인과 리뷰도 같다: `-s read-only`는 권한 프로필을 통째로 바꿔 디스크 전체 읽기, deny 0개, 쓰기·네트워크 차단이 된다(2026-11-20 thread store, 11-19 이후 21스레드). 2026-11-20부터 lane-verify가 세션 시작 때 deny 목록이 빠진 디스패치 스레드를 `thread <id> deny list: <m> of <n> denied locations missing`으로 보고한다. 정책은 Codex config(샌드박스 없음, 비밀 위치 deny 목록)와 `~/.codex/AGENTS.md`가 담는다.
 
 ## Dispatch
 - 헤드리스 exec는 프로필을 항상 `-p`로 명시한다. 대화형 TUI에서 모델을 바꾸면 base `~/.codex/config.toml`의 model/effort가 다시 써지고, 그 값이 `-p` 없는 디스패치로 샌다. 프로필(9개): `luna`(Luna/medium, 기계적인 일)·`high`(Sol/high)·`xhigh`(Sol/xhigh, 복잡하거나 중요한 일)·`astra`(Astra/high, 드물게)·`ultra`·`max`(Sol), `fast`(Terra/medium), `terra-max`·`terra-ultra`(사용자가 Terra 레인을 지정했을 때만). 측정 전에는 `high`로 시작하고, 여러 원인이 상호작용할 수 있으면 `xhigh`나 `astra`를 쓴다.
@@ -46,7 +46,7 @@ description: Codex Sol로 구현·테스트·디버깅을 디스패치하거나,
 
 ## PR 넘기기 (시험, 2026-11-19 ~ 12-03)
 - 대상: origin이 비공개 GitHub 저장소인 프로젝트. 공개 저장소와 원격 없는 곳은 Worktree 절의 병합 대기 절차를 쓴다.
-- 디스패치할 때 PR 본문 파일 `.omc/plans/<task>.pr.md`(목표, 수락 항목, 계약 경로)를 계약과 함께 만들고, 계약에 그 경로와 보고 요약 파일 경로를 적는다. Codex는 마지막 커밋 뒤 스스로 `pr-script handoff <wt> --body-file <task>.pr.md --report <요약 파일>`을 실행한다(AGENTS.md).
+- 디스패치할 때 PR 본문 파일 `.omc/plans/<task>.pr.md`(목표, 수락 항목, 계약 경로)를 계약과 함께 만들고, 계약에 그 경로와 보고 요약 파일 경로를 적는다. 코드를 Codex가 쓴 단위면 본문 끝(Claude Code 줄 앞)에 `Generated with [Codex](https://openai.com/codex/).` 한 줄을 둔다(소유자, 2026-11-21: Codex의 작업도 흔적을 남긴다). Codex는 마지막 커밋 뒤 스스로 `pr-script handoff <wt> --body-file <task>.pr.md --report <요약 파일>`을 실행한다(AGENTS.md).
 - 실행이 끝나면 같은 깨어남에서 PR이 그 커밋을 가리키는지 확인한다(`gh pr view <번호> --repo github.com/<owner>/<name> --json headRefOid`). 커밋이 없거나 넘기기가 실패했으면 원장에 적고, 필요하면 세션이 handoff를 대신 돌린다.
 - 그 커밋에서 게이트를 다시 돌리고 `pr-script status <wt> --context gates --state success|failure --description "<요약>"`. 리뷰 레인의 결과는 `pr-script review <wt> --file <review.json>`과 `--context review` 상태로 남긴다.
 - 수리는 열린 지적을 수리 계약에 옮겨 같은 브랜치로 다시 디스패치하고, Codex의 handoff가 같은 PR을 갱신한다.
@@ -82,7 +82,7 @@ description: Codex Sol로 구현·테스트·디버깅을 디스패치하거나,
 
 ## Worktree / 커밋 / 검증
 - 태스크 1개 = `sol/<task>` 브랜치 1개 = worktree 1개 = writer 1명이다.
-- 게이트가 통과하면 Codex가 task 브랜치에 커밋한다. 메인 세션은 `git diff <base>..<branch>`로 변경(`.husky/`, `.pre-commit-config.yaml`, package.json scripts 포함)을 보고, 그 커밋에서 게이트를 다시 돌려 통과를 확인한다. 커밋 확인 전에 `git -C <wt> rev-parse --abbrev-ref HEAD`가 `sol/<task>`이고 `git -C <wt> status --porcelain`이 비어 있는지 본다. 아니면 그 상태를 보고서와 대조하고 남은 변경을 결과에 포함해 판단한다. 기본 브랜치 병합은 소유자 확인을 기다린다(검증된 PR은 PR 넘기기 절대로 세션이 병합한다).
+- 게이트가 통과하면 Codex가 task 브랜치에 커밋한다(`~/.codex/AGENTS.md`대로 메시지 끝에 `Co-authored-by: Codex <noreply@openai.com>`). 프로젝트가 세션이 커밋한다고 정한 경우처럼 Codex가 쓴 변경을 세션이 대신 커밋할 때도 같은 꼬리말을 붙인다(소유자, 2026-11-21). 메인 세션은 `git diff <base>..<branch>`로 변경(`.husky/`, `.pre-commit-config.yaml`, package.json scripts 포함)을 보고, 그 커밋에서 게이트를 다시 돌려 통과를 확인한다. 커밋 확인 전에 `git -C <wt> rev-parse --abbrev-ref HEAD`가 `sol/<task>`이고 `git -C <wt> status --porcelain`이 비어 있는지 본다. 아니면 그 상태를 보고서와 대조하고 남은 변경을 결과에 포함해 판단한다. 기본 브랜치 병합은 소유자 확인을 기다린다(검증된 PR은 PR 넘기기 절대로 세션이 병합한다).
 - 병합 대기(orchestration.md Safety, 2026-11-19): 수락된 단위는 원장에 accepted로 두고 다른 일을 계속한다. 병합 때문에 멈추지 않고, 질문을 빠뜨리지도 않는다. 보고마다 대기 목록을 적고, 소유자가 대화에 들어오면 맨 먼저 대기 중인 확인을 한 질문으로 묻는다. 단위가 쌓여 있으면 아래부터 수락된 구간 전체를 묻고, 그 구간의 맨 위 단위와 그 위에 남는 단위 수를 밝힌다. 승인되면 기본 브랜치를 그 지점까지 fast-forward하고 원장에 merged를 적은 뒤, 새 단위는 기본 브랜치에서 시작한다.
 - 병합 질문에는 그 병합으로 지울 수 있는 worktree 목록을 붙인다: `git worktree list`와 `git -C <wt> status --porcelain`으로 변경 없음 / 미추적 파일만 있음(파일 이름) / 수정 있음으로 나누고, HANDOFF나 계약이 재사용한다고 적은 worktree는 뺀다. 병합 승인은 변경 없는 worktree의 제거까지 포함하고, 나머지는 따로 묻는다.
 - worktree 제거는 병합 뒤에 한다. 검증된 PR은 세션의 병합이, 그 밖의 저장소는 병합 질문에 대한 소유자의 승인이 변경 없는 worktree의 제거 승인이다. 순서: `git -C <wt> status --porcelain --ignored`의 `!!`·`??` 경로를 tar로 보존 → `git worktree remove <wt>`(`--force` 없이) → `git branch -d`(squash 병합이라 거부되면, 브랜치 끝이 병합된 PR의 headRefOid와 같을 때만 `git branch -D`) → `git worktree prune`. 여러 단위가 다시 쓰는 worktree는 `git worktree lock <wt> --reason reused`로 표시하고 지우지 않는다. 제거한 사실을 기록에 남긴다.
