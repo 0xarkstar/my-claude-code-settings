@@ -5,11 +5,12 @@
 
 ## Commit messages
 Format: `<type>: <description>` + optional body. Types: feat, fix, refactor, docs, test, chore, perf, ci.
-Commit on a non-default branch once the gates pass; merging into a default branch and pushing wait for the owner. If on the default branch, branch first.
+Commit on a non-default branch once the gates pass; merging into a default branch and pushing wait for the owner, except a task-branch push through `pr-script` and the merge of a verified PR (orchestration.md Safety). If on the default branch, branch first.
 
 ## Pull requests
 - Base the summary on the full branch history: `git diff <base>...HEAD`, not just the latest commit.
 - Include a short test plan. Push a new branch with `-u`.
+- In projects whose origin is a private GitHub repository, units are handed off as PRs through `pr-script` (orchestration.md Trials); the session merges a PR once its gates, review and acceptance statuses are success.
 
 ## Review
 - After writing code, get a separate review pass before merge — native `/code-review` for the working diff, or the `code-reviewer` agent. Address CRITICAL/HIGH first.

@@ -146,6 +146,10 @@ The live setup uses four servers: `c4ai-sse` (Crawl4AI through a stdio launcher)
 ## Not included
 
 - The hook scripts and the generator of the Codex permissions table (private tool).
+- `pr-script`, the PR hand-off script the rules and `sol-dispatch` refer to (private tool). It pushes only a `sol/` task
+  branch of a private GitHub repository and opens or updates its PR, posts the `lane/gates`, `lane/review` and
+  `lane/acceptance` commit statuses and review comments, merges only when those three are success, and after the merge
+  deletes the task branch and cleans up the worktree; a `sweep` removes merged branches and worktrees from a reviewed plan.
 - Third-party skills used in the live setup. Install them from their upstream repositories.
 - The allow list, model choice, plugins and status line of the live settings.
 - Personal research and publishing skills, and the memory content itself.
