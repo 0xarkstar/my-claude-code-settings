@@ -13,7 +13,7 @@ description: Codex Sol로 구현·테스트·디버깅을 디스패치하거나,
 - worktree는 `git worktree add -b sol/<task> <path> <base>`로 만든다. 헤드리스 디스패치에 OMX는 필요 없다(11-18 디스패치가 이 방식이었다).
 - 대안 한 줄: `codex exec --worktree`(값 없는 플래그)는 `~/.codex/worktrees/<id>/<repo>`에 detached HEAD로 새 worktree를 만들고 거기 남긴다. 브랜치가 필요하면 위 방식을 쓴다.
 - ultra이거나 1시간을 넘길 실행은 detached tmux로 띄운다(Claude의 BG-shell reaper가 메모리 압박 때 오래 도는 codex exec를 죽인 적이 있다, gotcha 14). stdin은 런처 안에서 닫는다.
-  - `<launcher.sh>`: `cd <abs wt> && exec codex exec -p <profile> --output-schema <schema> -o <report> "<같은 지시>" < /dev/null > <log> 2>&1`
+  - `<launcher.sh>`: `cd <abs wt> && codex exec -p <profile> --output-schema <schema> -o <report> "<같은 지시>" < /dev/null > <log> 2>&1`. 앞에 `exec`를 붙이지 않는다. 세 스트림을 모두 돌린 프로세스로 셸을 바꾸면 pane의 터미널을 쥔 프로세스가 없어진다. 그러면 tmux가 세션을 곧바로 닫고, codex는 세션 없이 계속 돌아 아래 감시가 일찍 깨어난다(11-18 프로브, 11-20 세 번 재발, 11-21 tmux 3.6a 재확인: `exec`가 있으면 3초에 세션이 없었고, 없으면 프로세스가 끝날 때까지 유지됐다).
   - `tmux new-session -d -s sol-<task> 'zsh <launcher.sh>'`. 알림을 줄 수 없는 이 실행에만 `tmux has-session -t sol-<task>`를 기다리는 가벼운 감시를 실행 하나에 하나 둔다.
 - 알림을 주는 실행은 디스패치와 완료 사이에 로그나 worktree를 들여다보지 않는다(확인 한 번이 요청 한 번이고 요청마다 컨텍스트 전체를 다시 읽는다).
 - 실행이 끝나면 같은 깨어남에서 이어 간다: 보고서 읽기, 헤더·thread store 확인(Record), diff 확인, 다음 단계 착수. 결과를 읽고 멈추지 않는다.
@@ -51,7 +51,7 @@ description: Codex Sol로 구현·테스트·디버깅을 디스패치하거나,
 - 그 커밋에서 게이트를 다시 돌리고 `pr-script status <wt> --context gates --state success|failure --description "<요약>"`. 리뷰 레인의 결과는 `pr-script review <wt> --file <review.json>`과 `--context review` 상태로 남긴다.
 - 수리는 열린 지적을 수리 계약에 옮겨 같은 브랜치로 다시 디스패치하고, Codex의 handoff가 같은 PR을 갱신한다.
 - 수락: `pr-script status <wt> --context acceptance --state success`, 원장에 accepted와 PR 번호.
-- 병합: 세 상태가 head에서 success면 세션이 바로 `pr-script merge <wt>`로 병합한다. 이 명령이 base가 기본 브랜치인지, head가 맞는지, 세 상태가 success인지 확인하고 squash 병합한 뒤, 병합이 기본 브랜치에 들어갔는지 확인한다(orchestration.md Safety; 기본 브랜치 병합이 자동 배포로 이어지는 저장소는 배포 확인을 받는다). 소유자가 먼저 보겠다고 한 PR만 `pr-script wait <wt>`를 백그라운드로 띄워 병합이나 코멘트를 기다린다(`comment`면 읽고 처리한다. 모든 계정이 소유자 것이라 작성자로는 구분하지 않고, 되돌리기 어려운 요청은 대화에서 확인한다).
+- 병합: 세 상태가 head에서 success면 세션이 바로 `pr-script merge <wt> --co-author "<세션의 귀속 지시에 있는 Co-Authored-By 값, 예: Claude Opus 5.5 <noreply@anthropic.com>>"`로 병합한다. GitHub 기본 squash 메시지에 세션의 꼬리말을 더해, main 커밋에 소유자·Codex·Claude가 함께 남는다(소유자, 2026-11-21; 결과 JSON의 `co_authors[].present`로 확인). 이 명령이 base가 기본 브랜치인지, head가 맞는지, 세 상태가 success인지 확인하고 squash 병합한 뒤, 병합이 기본 브랜치에 들어갔는지 확인한다(orchestration.md Safety; 기본 브랜치 병합이 자동 배포로 이어지는 저장소는 배포 확인을 받는다). 소유자가 먼저 보겠다고 한 PR만 `pr-script wait <wt>`를 백그라운드로 띄워 병합이나 코멘트를 기다린다(`comment`면 읽고 처리한다. 모든 계정이 소유자 것이라 작성자로는 구분하지 않고, 되돌리기 어려운 요청은 대화에서 확인한다).
 - 병합 뒤: `pr-script land <wt>`가 병합이 기본 브랜치에 들어갔는지 확인하고, 원격 작업 브랜치를 지우고, 작업 폴더와 로컬 브랜치를 정리한다. lock된 재사용 폴더, 수정이나 추적 안 된 파일이 있는 폴더, 사용 중인 폴더는 남기고 이유를 보고한다. main 체크아웃은 그것을 쓰는 세션이 직접 따라 올린다(`git fetch origin <기본 브랜치>` 뒤 `git merge --ff-only FETCH_HEAD`). 원장에 merged를 적는다.
 - 쌓인 정리: `pr-script sweep <저장소>`로 미리보기를 파일에 남겨 소유자에게 보이고, 지울 때는 그 파일을 계획으로 넘긴다(`--apply --plan <파일>`). 계획 뒤에 바뀌거나 새로 생긴 항목은 건드리지 않는다(2026-11-20 미리보기에 없던 폴더가 지워진 일 뒤로).
 - 쌓기는 아래 단위의 코드가 필요할 때만 `--base sol/<아래>`로 한다. 아래가 squash로 병합되면 `git rebase --onto origin/<기본 브랜치> <아래의 옛 끝> <위 브랜치>`로 다시 쌓고 handoff한다.
